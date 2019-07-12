@@ -9,12 +9,12 @@ double cycleMillis = 0;
 int maxSnakes = 300;
 int snakeCount = 0;
 
-int minR = 0;
+int minR = 100;
 int maxR = 255;
 int minG = 0;
 int maxG = 0;
 int minB = 0;
-int maxB = 0;
+int maxB = 255;
 
 Snake [] snakes = new Snake[maxSnakes];
 
@@ -69,6 +69,15 @@ void draw() {
 	previousMillis = millis();
 	cycleMillis += elapsed;
 
+}
+
+int getInactiveSnakeIndex() {
+	for(int i = 0; i < maxSnakes; i++) {
+		if (!snakes[i].isActive()) {
+			return i;
+		}
+	}
+	return -1;
 }
 
 void populateSnakes() {

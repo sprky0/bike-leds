@@ -40,16 +40,11 @@ void draw() {
 		if (!snakes[i].isActive())
 			continue;
 
-		// print("working on snake " + i + " - ");
-
 		int startP = snakes[i].getPixel();
 
 		for (int j = 0; j < snakes[i].getLength(); j++) {
-			// print( " " + snakes[i].getLength() + j + " to " + snakes[i].getRAt(j) + "," + snakes[i].getGAt(j) + "," + snakes[i].getBAt(j) );
 			strip.setPixelColor((startP + j) % totalPixelCount, snakes[i].getRAt(j), snakes[i].getGAt(j), snakes[i].getBAt(j));
 		}
-
-		// println("");
 
 		snakes[i].update(elapsed, totalPixelCount);
 
@@ -57,9 +52,12 @@ void draw() {
 
 	strip.show();
 
+	// switch mode outside this matybe ? diff modes have diff timing i guess
 	if (cycleMillis > 1000) {
 
+		// switch mode etc
 		freshSnakes();
+
 		// here is something which happens every second
 		// eg make one new particle or something like that
 		// snakes[snakeCount] = new Snake((int) random(0,300), (int) random(0,255), (int) random(0,255), (int) random(0,255) );

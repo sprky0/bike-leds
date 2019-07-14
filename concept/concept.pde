@@ -6,7 +6,7 @@ NeoPixelProxy strip;
 double previousMillis = 0;
 double cycleMillis = 0;
 
-int maxSnakes = 300;
+int maxSnakes = 10000;
 int snakeCount = 0;
 
 int minR = 100;
@@ -56,7 +56,7 @@ void draw() {
 	// switch mode outside this matybe ? diff modes have diff timing i guess
 	if (cycleMillis > 250) {
 
-		addARandomSnake();
+		// addARandomSnake();
 		// switch mode etc
 		// regularSnakes();
 		// freshSnakes();
@@ -135,13 +135,15 @@ void regularSnakes() {
 			// length
 			5,
 			// speed
-			100,
+			500,
 			// RGB:
 			255,0,0
 		);
 
+		snakes[i].setFriction(0.8);
+
 		if (curPixel < totalPixelCount) {
-			curPixel += 10;
+			curPixel += 20;
 			snakes[i].setActive();
 		} else {
 			snakes[i].setInactive();
@@ -178,6 +180,7 @@ class Snake {
 
 	float p = 0; // you can be between 2 pixels but getPixel will deal with it
 	float v = 0; // velocity
+	float f = 1; // friction
 
 	int [] clr = new int[3];
 	int snakeLength = 1; // in pixels
@@ -206,6 +209,10 @@ class Snake {
 		v = velocityPixelsPerSecond;
 	}
 
+	void setFriction(float frictionPerSecond) {
+		f = frictionPerSecond;
+	}
+
 	void setActive() {
 		_active = true;
 	}
@@ -225,6 +232,7 @@ class Snake {
 	// passing elapsed time so we don't need to internally calculate it on each snake
 	void update(double elapsed, int pixelCount) {
 		p = (p + ((float) (elapsed / 1000) * v));
+		p *= 1 - ((float) (elapsed / 1000) * f);
 		while (p < 0)
 			p = 300 + p;
 		p = p % pixelCount;

@@ -1,5 +1,6 @@
 int mode = 0;
 int totalPixelCount = 300;
+int practicalPixelCount = 300;
 
 NeoPixelProxy strip;
 
@@ -32,7 +33,7 @@ void draw() {
 
 	double elapsed = millis() - previousMillis;
 
-	for(int i = 0; i < totalPixelCount; i++) {
+	for(int i = 0; i < practicalPixelCount; i++) {
 		strip.setPixelColor(i,0,0,0);
 	}
 
@@ -44,10 +45,10 @@ void draw() {
 		int startP = snakes[i].getPixel();
 
 		for (int j = 0; j < snakes[i].getLength(); j++) {
-			strip.setPixelColor((startP + j) % totalPixelCount, snakes[i].getRAt(j), snakes[i].getGAt(j), snakes[i].getBAt(j));
+			strip.setPixelColor((startP + j) % practicalPixelCount, snakes[i].getRAt(j), snakes[i].getGAt(j), snakes[i].getBAt(j));
 		}
 
-		snakes[i].update(elapsed, totalPixelCount);
+		snakes[i].update(elapsed, practicalPixelCount);
 
 	}
 
@@ -232,9 +233,12 @@ class Snake {
 	// passing elapsed time so we don't need to internally calculate it on each snake
 	void update(double elapsed, int pixelCount) {
 		p = (p + ((float) (elapsed / 1000) * v));
-		p *= 1 - ((float) (elapsed / 1000) * f);
+		// p *= 1 - ((float) (elapsed / 1000) * f);
+		v *= 1 - ((float) (elapsed / 1000) * f);
+
 		while (p < 0)
-			p = 300 + p;
+			p = pixelCount + p;
+
 		p = p % pixelCount;
 	}
 

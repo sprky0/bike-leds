@@ -45,7 +45,8 @@ void draw() {
 		int startP = snakes[i].getPixel();
 
 		for (int j = 0; j < snakes[i].getLength(); j++) {
-			strip.setPixelColor((startP + j) % practicalPixelCount, snakes[i].getRAt(j), snakes[i].getGAt(j), snakes[i].getBAt(j));
+			// strip.setPixelColor((startP + j) % practicalPixelCount, snakes[i].getRAt(j), snakes[i].getGAt(j), snakes[i].getBAt(j));
+			strip.setPixelColorAdditive((startP + j) % practicalPixelCount, snakes[i].getRAt(j), snakes[i].getGAt(j), snakes[i].getBAt(j));
 		}
 
 		snakes[i].update(elapsed, practicalPixelCount);
@@ -57,7 +58,7 @@ void draw() {
 	// switch mode outside this matybe ? diff modes have diff timing i guess
 	if (cycleMillis > 250) {
 
-		// addARandomSnake();
+		addARandomSnake();
 		// switch mode etc
 		// regularSnakes();
 		// freshSnakes();
@@ -118,6 +119,9 @@ void addARandomSnake() {
 		);
 		snakes[snakeIndex].setActive();
 
+
+		snakes[snakeIndex].setLifetime( (int) random(1000,5000) );
+
 	} else {
 		println("I wanted snake but I got " + snakeIndex);
 	}
@@ -136,12 +140,12 @@ void regularSnakes() {
 			// length
 			5,
 			// speed
-			500,
+			100,
 			// RGB:
 			255,0,0
 		);
 
-		snakes[i].setFriction(0.8);
+		// snakes[i].setFriction(0);
 
 		if (curPixel < totalPixelCount) {
 			curPixel += 20;
@@ -181,8 +185,10 @@ class Snake {
 
 	float p = 0; // you can be between 2 pixels but getPixel will deal with it
 	float v = 0; // velocity
-	float f = 1; // friction
+	float f = 0; // friction
 
+	double bornMillis = -1;
+	double lifetimeMS = -1;
 	int [] clr = new int[3];
 	int snakeLength = 1; // in pixels
 	boolean _protected = false;
@@ -193,6 +199,9 @@ class Snake {
 	int mode = 0;
 
 	Snake(int startPixel, int lengthInPixels, float velocityPixelsPerSecond, int r, int g, int b) {
+
+		bornMillis = millis();
+
 		// what pixel are we 'on'
 		setPixel(startPixel);
 		setVelocity(velocityPixelsPerSecond);
@@ -212,6 +221,10 @@ class Snake {
 
 	void setFriction(float frictionPerSecond) {
 		f = frictionPerSecond;
+	}
+
+	void setLifetime(double lifetime) {
+		lifetimeMS = lifetime;
 	}
 
 	void setActive() {
@@ -240,6 +253,12 @@ class Snake {
 			p = pixelCount + p;
 
 		p = p % pixelCount;
+
+		if (lifetimeMS > 0 && millis() - bornMillis > lifetimeMS) {
+			setInactive();
+			setPixel(0);
+		}
+
 	}
 
 	int getLength() {
@@ -312,5 +331,20 @@ class NeoPixelProxy {
 		pixels[pixel][2] = b;
 	}
 
+	void setPixelColorAdditive(int pixel, int r, int g, int b) {
+		pixels[pixel][0] = pixels[pixel][0] + r;
+		pixels[pixel][1] = pixels[pixel][1] + g;
+		pixels[pixel][2] = pixels[pixel][2] + b;
+
+		if (pixels[pixel][0] > 255)
+			pixels[pixel][0] = 255;
+
+		if (pixels[pixel][1] > 255)
+			pixels[pixel][1] = 255;
+
+		if (pixels[pixel][2] > 255)
+			pixels[pixel][2] = 255;
+
+	}
 
 }

@@ -23,7 +23,8 @@ void setup() {
 	size(1200, 40);
 	strip = new NeoPixelProxy(totalPixelCount);
 
-	populateSnakes();
+	// populateSnakes();
+	regularSnakes();
 
 }
 
@@ -53,10 +54,12 @@ void draw() {
 	strip.show();
 
 	// switch mode outside this matybe ? diff modes have diff timing i guess
-	if (cycleMillis > 1000) {
+	if (cycleMillis > 250) {
 
+		addARandomSnake();
 		// switch mode etc
-		freshSnakes();
+		// regularSnakes();
+		// freshSnakes();
 
 		// here is something which happens every second
 		// eg make one new particle or something like that
@@ -69,12 +72,24 @@ void draw() {
 
 }
 
-int getInactiveSnakeIndex() {
+int getFreeSnakeIndex() {
+	// first try to find the first Inactive snake
 	for(int i = 0; i < maxSnakes; i++) {
 		if (!snakes[i].isActive()) {
 			return i;
 		}
 	}
+
+	// try 10x to get a random nonprotected snake
+	int tries = 0;
+	while (tries < 10) {
+		int snakeTry = (int) random(0,maxSnakes);
+		if (!snakes[snakeTry].isProtected()) {
+			return snakeTry;
+		}
+		tries ++;
+	}
+	// we totally fail:
 	return -1;
 }
 
@@ -82,6 +97,59 @@ void populateSnakes() {
 	for(int i = 0; i < maxSnakes; i++) {
 		snakes[i] = new Snake(0, 1, 0, 0, 0, 0);
 	}
+}
+
+void addARandomSnake() {
+
+	int snakeIndex = getFreeSnakeIndex();
+
+	if (snakeIndex >= 0) {
+
+		println("GOT" + snakeIndex);
+
+		snakes[snakeIndex] = new Snake(
+			0,// starting pixel
+			(int) random(0,10),// length
+			// speed
+			random(-100,100),
+			// RGB:
+			(int)random(0,255),(int)random(0,255),(int)random(0,255)
+		);
+		snakes[snakeIndex].setActive();
+
+	} else {
+		println("I wanted snake but I got " + snakeIndex);
+	}
+
+}
+
+void regularSnakes() {
+
+	int curPixel = 0;
+
+	for(int i = 0; i < maxSnakes; i++) {
+		println(i);
+		snakes[i] = new Snake(
+			// starting pixel
+			curPixel,
+			// length
+			5,
+			// speed
+			100,
+			// RGB:
+			255,0,0
+		);
+
+		if (curPixel < totalPixelCount) {
+			curPixel += 10;
+			snakes[i].setActive();
+		} else {
+			snakes[i].setInactive();
+			curPixel = 0;
+		}
+
+	}
+
 }
 
 void freshSnakes() {
@@ -113,7 +181,8 @@ class Snake {
 
 	int [] clr = new int[3];
 	int snakeLength = 1; // in pixels
-	boolean active = false;
+	boolean _protected = false;
+	boolean _active = false;
 
 	// what kind of thing is this fucker?  (eg: blinky boy, fader slowly, wwhatever)
 	// maybe also include some notion of trailing off at the edges
@@ -138,11 +207,19 @@ class Snake {
 	}
 
 	void setActive() {
-		active = true;
+		_active = true;
 	}
 
 	void setInactive() {
-		active = false;
+		_active = false;
+	}
+
+	void setProtected() {
+		_protected = true;
+	}
+
+	void setUnprotected() {
+		_protected = false;
 	}
 
 	// passing elapsed time so we don't need to internally calculate it on each snake
@@ -174,8 +251,12 @@ class Snake {
 		return clr[2];
 	}
 
+	boolean isProtected() {
+		return _protected;
+	}
+
 	boolean isActive() {
-		return active;
+		return _active;
 	}
 
 }

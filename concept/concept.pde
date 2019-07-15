@@ -1,4 +1,7 @@
+// int MODE_SNAKE = // etc something like this - which mode are we switched into, parking, blinky boy etc, generative wahtever
+static int MODE_XMAS = 1225;
 int mode = 0;
+
 int totalPixelCount = 300;
 int practicalPixelCount = 300;
 
@@ -7,8 +10,9 @@ NeoPixelProxy strip;
 double previousMillis = 0;
 double cycleMillis = 0;
 
-int maxSnakes = 1000;
-int snakeCount = 0;
+
+int maxSnakes = 300; // we don't really need more than we have pixels right ?
+// int snakeCount = 0; //
 
 int minR = 100;
 int maxR = 255;
@@ -22,10 +26,13 @@ Snake [] snakes = new Snake[maxSnakes];
 void setup() {
 
 	size(1200, 40);
+
 	strip = new NeoPixelProxy(totalPixelCount);
 
-	// populateSnakes();
-	regularSnakes();
+	// alwaysdo this at the beginning to get a bunch of blank snake memory
+	populateSnakes();
+	// regularSnakes();
+	mode = MODE_XMAS;
 
 }
 
@@ -33,10 +40,89 @@ void draw() {
 
 	double elapsed = millis() - previousMillis;
 
+	updateDisplay(elapsed);
+
+	switch(mode) {
+
+		case 1225:
+			if (cycleMillis > 500) {
+				// explodeSnake();
+				int snakeIndex = getFreeSnakeIndex();
+				snakes[snakeIndex] = new Snake(
+					0,
+					8,
+					25,
+					(int) random(minR, maxR),
+					(int) random(minG, maxG),
+					(int) random(minB, maxB)
+				);
+				snakes[snakeIndex].setActive();
+				snakes[snakeIndex].setLifetime(10000);
+
+				snakeIndex = getFreeSnakeIndex();
+				snakes[snakeIndex] = new Snake(
+					0,
+					2,
+					50,
+					(int) random(minR, maxR),
+					(int) random(minG, maxG),
+					(int) random(minB, maxB)
+				);
+				snakes[snakeIndex].setActive();
+				snakes[snakeIndex].setLifetime(10000);
+
+				snakeIndex = getFreeSnakeIndex();
+				snakes[snakeIndex] = new Snake(
+					0,
+					1,
+					100,
+					(int) random(minR, maxR),
+					(int) random(minG, maxG),
+					(int) random(minB, maxB)
+				);
+				snakes[snakeIndex].setActive();
+				snakes[snakeIndex].setLifetime(10000);
+
+				cycleMillis = 0;
+			}
+		break;
+
+		default:
+
+			// switch mode outside this matybe ? diff modes have diff timing i guess
+			if (cycleMillis > 250) {
+
+				addARandomSnake();
+
+				if (random(0,1) > 0.5) {
+					println("Gonna splode a fool");
+					int sploder = getActiveSnakeIndex();
+					if (sploder > 0)
+						explodeSnake(sploder);
+					else
+						println("Couldn't find a fool to splode");
+				}
+
+				cycleMillis = 0;
+			}
+
+		break;
+
+	}
+
+	previousMillis = millis();
+	cycleMillis += elapsed;
+
+}
+
+void updateDisplay(double elapsed) {
+
+	// set all default to black
 	for(int i = 0; i < practicalPixelCount; i++) {
 		strip.setPixelColor(i,0,0,0);
 	}
 
+	// set all to pixel color from
 	for(int i = 0; i < maxSnakes; i++) {
 
 		if (!snakes[i].isActive())
@@ -54,29 +140,6 @@ void draw() {
 	}
 
 	strip.show();
-
-	// switch mode outside this matybe ? diff modes have diff timing i guess
-	if (cycleMillis > 250) {
-
-		addARandomSnake();
-		// switch mode etc
-		// regularSnakes();
-		// freshSnakes();
-
-		if (random(0,1) > 0.5) {
-			println("Gonna splode a fool");
-			int sploder = getActiveSnakeIndex();
-			if (sploder > 0)
-				explodeSnake(sploder);
-			else
-				println("Couldn't find a fool to splode");
-		}
-
-		cycleMillis = 0;
-	}
-
-	previousMillis = millis();
-	cycleMillis += elapsed;
 
 }
 

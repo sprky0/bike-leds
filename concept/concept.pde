@@ -32,7 +32,21 @@ void setup() {
 	// alwaysdo this at the beginning to get a bunch of blank snake memory
 	populateSnakes();
 	// regularSnakes();
-	mode = MODE_XMAS;
+	// mode = MODE_XMAS;
+//
+
+
+	// explodeSnake();
+	int snakeIndex = getFreeSnakeIndex();
+	snakes[snakeIndex] = new Snake(
+		0,
+		10,
+		100,
+
+		255,0,0
+	);
+	snakes[snakeIndex].setActive();
+
 
 }
 
@@ -44,7 +58,28 @@ void draw() {
 
 	switch(mode) {
 
-		case 1225:
+		// 1225
+
+		case 1223:
+			if (cycleMillis > 500) {
+				// explodeSnake();
+				int snakeIndex = getFreeSnakeIndex();
+				snakes[snakeIndex] = new Snake(
+					0,
+					100,
+					500,
+					(int) random(minR, maxR),
+					(int) random(minG, maxG),
+					(int) random(minB, maxB)
+				);
+				snakes[snakeIndex].setActive();
+				snakes[snakeIndex].setLifetime(10000);
+
+				cycleMillis = 0;
+			}
+		break;
+
+		case 1224:
 			if (cycleMillis > 500) {
 				// explodeSnake();
 				int snakeIndex = getFreeSnakeIndex();
@@ -87,7 +122,8 @@ void draw() {
 			}
 		break;
 
-		default:
+		// default:
+		case 1111:
 
 			// switch mode outside this matybe ? diff modes have diff timing i guess
 			if (cycleMillis > 250) {
@@ -350,7 +386,9 @@ class Snake {
 
 	// what kind of thing is this fucker?  (eg: blinky boy, fader slowly, wwhatever)
 	// maybe also include some notion of trailing off at the edges
-	int mode = 0;
+
+	int mode = 1; // fades away from velcotiy
+	// int mode = 0; // does nothing
 
 	Snake(int startPixel, int lengthInPixels, float velocityPixelsPerSecond, int r, int g, int b) {
 
@@ -427,17 +465,34 @@ class Snake {
 		return (int) p;
 	}
 
+	int chanelValueAt(int pos, int channelValue) {
+		switch(mode) {
+			default:
+			case 0:
+				return channelValue;
+				// break;
+			case 1:
+				float scaleValue = ((float) snakeLength - (float) pos) / (float) snakeLength;
+				if (v > 0) {
+					scaleValue = 1 - scaleValue;
+				}
+				float channelScaledValue = scaleValue * (float) channelValue;
+				return (int) channelScaledValue;
+		}
+	}
+
 	// pos = 0 to (length-1)
 	int getRAt(int pos) {
-		return clr[0];
+		return chanelValueAt(pos, clr[0]);
 	}
 
 	int getGAt(int pos) {
-		return clr[1];
+		return chanelValueAt(pos, clr[1]);
+
 	}
 
 	int getBAt(int pos) {
-		return clr[2];
+		return chanelValueAt(pos, clr[2]);
 	}
 
 	boolean isProtected() {

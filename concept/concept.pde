@@ -58,7 +58,7 @@ void draw() {
 	// switch mode outside this matybe ? diff modes have diff timing i guess
 	if (cycleMillis > 250) {
 
-		// addARandomSnake();
+		addARandomSnake();
 		// switch mode etc
 		// regularSnakes();
 		// freshSnakes();

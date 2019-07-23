@@ -5,6 +5,20 @@
 #include "PixelProxy.h"
 #include "Snake.h"
 
+// #include "Example.h"
+//
+//
+// Example examples[MAX_SNAKES];
+//
+// void setup() {
+//
+// }
+//
+// void loop() {
+//
+// }
+
+
 // int MODE_SNAKE = // etc something like this - which mode are we switched into, parking, blinky boy etc, generative wahtever
 // static int MODE_XMAS = 1225;
 
@@ -29,37 +43,21 @@ int maxG = 0;
 int minB = 0;
 int maxB = 255;
 
-Snake snakes[MAX_SNAKES];
+Snake snakes[MAX_SNAKES]; //  = new Snake[MAX_SNAKES];
 //
 void setup() {
-//
-	snakes = Snake(MAX_SNAKES)
-//
+
+	// reserve memory for snakes
+	populateSnakes();
+	// set up strip proxy - the thing we directly interact with to set 'pixels' along the range
 	strip = PixelProxy();
-//
-// 	// alwaysdo this at the beginning to get a bunch of blank snake memory
-// 	populateSnakes();
-// 	// regularSnakes();
-// 	// mode = MODE_XMAS;
-// //
-//
-//
-// 	// explodeSnake();
-// 	int snakeIndex = getFreeSnakeIndex();
-// 	snakes[snakeIndex] = new Snake(
-// 		0,
-// 		10,
-// 		100,
-//
-// 		255,0,0
-// 	);
-// 	snakes[snakeIndex].setActive();
-//
-//
+	// set up actual Adafruit LED library - the thing we 'print' to by asking PixelProxy
+	// strip = new ...etc...
+
 }
 //
 void loop() {
-
+/*
 	double elapsed = millis() - previousMillis;
 
 	updateDisplay(elapsed);
@@ -153,36 +151,36 @@ void loop() {
 
 	previousMillis = millis();
 	cycleMillis += elapsed;
-
+*/
 }
-
-void updateDisplay(double elapsed) {
-
-	// set all default to black
-	for(int i = 0; i < practicalPixelCount; i++) {
-		strip.setPixelColor(i,0,0,0);
-	}
-
-	// set all to pixel color from
-	for(int i = 0; i < MAX_SNAKES; i++) {
-
-		if (!snakes[i].isActive())
-			continue;
-
-		int startP = snakes[i].getPixel();
-
-		for (int j = 0; j < snakes[i].getLength(); j++) {
-			// strip.setPixelColor((startP + j) % practicalPixelCount, snakes[i].getRAt(j), snakes[i].getGAt(j), snakes[i].getBAt(j));
-			strip.setPixelColorAdditive((startP + j) % practicalPixelCount, snakes[i].getRAt(j), snakes[i].getGAt(j), snakes[i].getBAt(j));
-		}
-
-		snakes[i].update(elapsed, practicalPixelCount);
-
-	}
-
-	strip.show();
-
-}
+// 
+// void updateDisplay(double elapsed) {
+//
+// 	// set all default to black
+// 	for(int i = 0; i < practicalPixelCount; i++) {
+// 		strip.setPixelColor(i,0,0,0);
+// 	}
+//
+// 	// set all to pixel color from
+// 	for(int i = 0; i < MAX_SNAKES; i++) {
+//
+// 		if (!snakes[i].isActive())
+// 			continue;
+//
+// 		int startP = snakes[i].getPixel();
+//
+// 		for (int j = 0; j < snakes[i].getLength(); j++) {
+// 			// strip.setPixelColor((startP + j) % practicalPixelCount, snakes[i].getRAt(j), snakes[i].getGAt(j), snakes[i].getBAt(j));
+// 			strip.setPixelColorAdditive((startP + j) % practicalPixelCount, snakes[i].getRAt(j), snakes[i].getGAt(j), snakes[i].getBAt(j));
+// 		}
+//
+// 		snakes[i].update(elapsed, practicalPixelCount);
+//
+// 	}
+//
+// 	strip.show();
+//
+// }
 //
 // int getActiveSnakeIndex() {
 // 	// try 10x to get a random nonprotected snake

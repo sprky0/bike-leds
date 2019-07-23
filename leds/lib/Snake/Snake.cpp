@@ -1,5 +1,5 @@
 #include <Arduino.h>
-#include <Snake.h>
+#include "Snake.h"
 
 #ifndef SNAKE_CPP
 #define SNAKE_CPP
@@ -22,6 +22,16 @@
 	//
 	// int mode = 1; // fades away from velcotiy
 	// // int mode = 0; // does nothing
+
+Snake::Snake() {
+	bornMillis = millis();
+	setPixel(0);
+	setVelocity(0);
+	snakeLength = 1;
+	clr[0] = 0;
+	clr[1] = 0;
+	clr[2] = 0;
+}
 
 Snake::Snake(int startPixel, int lengthInPixels, float velocityPixelsPerSecond, int r, int g, int b) {
 
@@ -82,7 +92,7 @@ void Snake::update(double elapsed, int pixelCount) {
 	while (p < 0)
 		p = pixelCount + p;
 
-	p = p % pixelCount;
+	// p = p % pixelCount;
 
 	if (lifetimeMS > 0 && millis() - bornMillis > lifetimeMS) {
 		setInactive();

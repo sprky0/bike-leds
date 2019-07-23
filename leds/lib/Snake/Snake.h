@@ -24,6 +24,7 @@ class Snake {
 		int mode = 1; // fades away from velcotiy
 		// int mode = 0; // does nothing
 
+		Snake();
 		Snake(int startPixel, int lengthInPixels, float velocityPixelsPerSecond, int r, int g, int b);
 
 		void setPixel(int pixel);

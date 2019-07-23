@@ -1,5 +1,5 @@
 #include <Arduino.h>
-#include <PixelProxy.h>
+#include "PixelProxy.h"
 
 #ifndef PIXELPROXY_CPP
 #define PIXELPROXY_CPP

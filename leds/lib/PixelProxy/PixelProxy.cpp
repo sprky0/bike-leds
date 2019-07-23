@@ -4,28 +4,13 @@
 #ifndef PIXELPROXY_CPP
 #define PIXELPROXY_CPP
 
-/**
- * Class that simulates approximately what NeoPixel lib has for its API
- * Also draws the thing w/ .show()
- */
-// class PixelProxy {
-
-	// in .h
-	// int brightness = 255;
-	// int [300][3] pixels;
-	// int pixelCount = 0;
-
-	// there's also pin and some other crap in the constructor for NeoPixel library
+// there's also pin and some other crap in the constructor for NeoPixel library
 PixelProxy::PixelProxy() {
-	// ok so change of plans -- too specific implementation, i am hard coding pixel counts etc
-	// pixelCount = num;
-	// initialize this fucking bastard
-	pixels = new int[pixelCount][3];
+	// pixels = int[TOTAL_PIXEL_COUNT][3];
 }
 
 void PixelProxy::setBrightness(int b) {
-	// if (b < 0 || b > 255)
-	// 	throw(new Exception("Brightness out of range"));
+	if (b >= 0 && b < 255)
 	brightness = b;
 }
 

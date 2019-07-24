@@ -11,24 +11,7 @@ PixelProxy::PixelProxy() {
 
 void PixelProxy::setBrightness(int b) {
 	if (b >= 0 && b < 255)
-	brightness = b;
-}
-
-void PixelProxy::show() {
-
-	// in here we have to deal with applying LED shit to actual LED strip
-	// and deal with like parallel strips that are the 'same' and all this sort of shit
-
-
-
-	// int w = width / pixelCount;
-	// int h = height;
-	// for(int i = 0; i < pixelCount; i++) {
-	// 	// // pixels[i]
-	// 	// noStroke();
-	// 	// fill(pixels[i][0],pixels[i][1],pixels[i][2]);
-	// 	// rect(i * w, 0, w, h);
-	// }
+		brightness = b;
 }
 
 void PixelProxy::setPixelColor(int pixel, int r, int g, int b) {
@@ -59,6 +42,16 @@ void PixelProxy::setPixelColorAdditive(int pixel, int r, int g, int b) {
 			pixels[pixel][2] = 255;
 
 	// }
+}
+
+int PixelProxy::getRAt(int pixel) {
+	return pixels[pixel][0];
+}
+int PixelProxy::getGAt(int pixel) {
+	return pixels[pixel][1];
+}
+int PixelProxy::getBAt(int pixel) {
+	return pixels[pixel][2];
 }
 
 #endif

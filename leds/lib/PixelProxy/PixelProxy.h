@@ -21,9 +21,12 @@ class PixelProxy {
 		PixelProxy();
 
 		void setBrightness(int b);
-		void show();
 		void setPixelColor(int pixel, int r, int g, int b);
 		void setPixelColorAdditive(int pixel, int r, int g, int b);
+
+		int getRAt(int pixel);
+		int getGAt(int pixel);
+		int getBAt(int pixel);
 
 };
 

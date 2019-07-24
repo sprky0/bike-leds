@@ -1,18 +1,22 @@
+// @todo reconcile this: we have some dupes and crap
+
 #define TOTAL_PIXEL_COUNT 300
 #define PRACTICAL_PIXEL_COUNT 300
 #define MAX_SNAKES 300
+#define STRIP_PIXEL_LENGTH 300
+#define PIXEL_PIN 6
+
 
 #include <Arduino.h>
+#include <Adafruit_NeoPixel.h>
 #include "PixelProxy.h"
 #include "Snake.h"
 
-// int MODE_SNAKE = // etc something like this - which mode are we switched into, parking, blinky boy etc, generative wahtever
-// static int MODE_XMAS = 1225;
 
 int mode = 0;
 
 //
-PixelProxy strip; // = PixelProxy(TOTAL_PIXEL_COUNT);
+PixelProxy proxy = PixelProxy();
 //
 double previousMillis = 0;
 double cycleMillis = 0;
@@ -28,25 +32,38 @@ int maxG = 0;
 int minB = 0;
 int maxB = 255;
 
+Adafruit_NeoPixel strip(STRIP_PIXEL_LENGTH, PIXEL_PIN, NEO_GRB + NEO_KHZ800);
 Snake snakes[MAX_SNAKES]; //  = Snake[MAX_SNAKES];
 //
 void setup() {
 
 	// reserve memory for snakes
 	populateSnakes();
+
 	// set up strip proxy - the thing we directly interact with to set 'pixels' along the range
-	strip = PixelProxy();
-	// set up actual Adafruit LED library - the thing we 'print' to by asking PixelProxy
+	// should be done above before setup
+	// proxy.setXYZ whatever
+
+	// set up actual Adafruit LED library - the thing we 'print' to by asking PixelProxy for values
 	// strip = new ...etc...
+
+	strip.begin(); // Initialize NeoPixel strip object (REQUIRED)
+
+	for(int i = 0; i < STRIP_PIXEL_LENGTH; i++) {
+		strip.setPixelColor(i , 0, 0, 0);
+	}
+
+	strip.show();  // Initialize all pixels to 'off'
 
 }
 //
 void loop() {
-/*
+
 	double elapsed = millis() - previousMillis;
 
 	updateDisplay(elapsed);
 
+	/*
 	switch(mode) {
 
 		// 1225
@@ -133,17 +150,19 @@ void loop() {
 		break;
 
 	}
-
+	*/
 	previousMillis = millis();
 	cycleMillis += elapsed;
-*/
+
+	// updateDisplay();
+
 }
 
 void updateDisplay(double elapsed) {
 
 	// set all default to black
 	for(int i = 0; i < PRACTICAL_PIXEL_COUNT; i++) {
-		strip.setPixelColor(i,0,0,0);
+		proxy.setPixelColor(i,0,0,0);
 	}
 
 	// set all to pixel color from
@@ -155,12 +174,17 @@ void updateDisplay(double elapsed) {
 		int startP = snakes[i].getPixel();
 
 		for (int j = 0; j < snakes[i].getLength(); j++) {
-			// strip.setPixelColor((startP + j) % PRACTICAL_PIXEL_COUNT, snakes[i].getRAt(j), snakes[i].getGAt(j), snakes[i].getBAt(j));
-			strip.setPixelColorAdditive((startP + j) % PRACTICAL_PIXEL_COUNT, snakes[i].getRAt(j), snakes[i].getGAt(j), snakes[i].getBAt(j));
+			// proxy.setPixelColor((startP + j) % PRACTICAL_PIXEL_COUNT, snakes[i].getRAt(j), snakes[i].getGAt(j), snakes[i].getBAt(j));
+			proxy.setPixelColorAdditive((startP + j) % PRACTICAL_PIXEL_COUNT, snakes[i].getRAt(j), snakes[i].getGAt(j), snakes[i].getBAt(j));
 		}
 
 		snakes[i].update(elapsed, PRACTICAL_PIXEL_COUNT);
 
+	}
+
+	// set all default to black
+	for(int i = 0; i < PRACTICAL_PIXEL_COUNT; i++) {
+		strip.setPixelColor(i, proxy.getGAt(i), proxy.getRAt(i), proxy.getBAt(i));
 	}
 
 	strip.show();

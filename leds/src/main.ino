@@ -1,6 +1,6 @@
 // Pixel configuration relative to strip length
 #define PRACTICAL_PIXEL_COUNT 300
-#define MAX_SNAKES 100
+#define MAX_SNAKES 150
 #define STRIP_PIXEL_LENGTH 300
 #define PIXEL_PIN 6
 
@@ -24,8 +24,8 @@ int displayMode = DEFAULT_MODE;
 int printMode = ADDITIVE_MODE;
 
 //
-double previousMillis = 0;
-double cycleMillis = 0;
+long previousMillis = 0;
+long cycleMillis = 0;
 
 Snake snakes[MAX_SNAKES];
 PixelProxy proxy = PixelProxy();
@@ -37,7 +37,6 @@ int minG = 0;
 int maxG = 0;
 int minB = 0;
 int maxB = 255;
-
 
 void setup() {
 
@@ -74,9 +73,9 @@ void setup() {
 
 void loop() {
 
-	Serial.println("(start loop)");
+	// Serial.println("(start loop)");
 
-	double elapsed = millis() - previousMillis;
+	long elapsed = millis() - previousMillis;
 
 	// Print to LEDs
 	updateDisplay(elapsed);
@@ -174,8 +173,8 @@ void loop() {
 	previousMillis = millis();
 	cycleMillis += elapsed;
 
-	Serial.println("(end loop)");
-
+	// Serial.println("(end loop)");
+	Serial.println(elapsed);
 }
 
 void updateDisplay(double elapsed) {
@@ -193,8 +192,13 @@ void updateDisplay(double elapsed) {
 
 		int startP = snakes[i].getPixel();
 
+		// Serial.print("Pixel drawing for snake ");
+		// Serial.print(i);
+		// Serial.print(" at pixel ");
+		// Serial.println(startP);
+
 		for (int j = 0; j < snakes[i].getLength(); j++) {
-			Serial.println(j);
+
 			switch( printMode ) {
 				case ADDITIVE_MODE:
 					proxy.setPixelColorAdditive((startP + j) % PRACTICAL_PIXEL_COUNT, snakes[i].getRAt(j), snakes[i].getGAt(j), snakes[i].getBAt(j));
@@ -204,6 +208,7 @@ void updateDisplay(double elapsed) {
 				case REPLACEMENT_MODE:
 					proxy.setPixelColor((startP + j) % PRACTICAL_PIXEL_COUNT, snakes[i].getRAt(j), snakes[i].getGAt(j), snakes[i].getBAt(j));
 					break;
+
 			}
 		}
 
@@ -217,10 +222,10 @@ void updateDisplay(double elapsed) {
 		strip.setPixelColor(i, proxy.getGAt(i), proxy.getRAt(i), proxy.getBAt(i) );
 	}
 
-	Serial.println("show pixels now");
+	// Serial.println("updateDisplay() - will show pixels now");
 	strip.show();
 
-	delay(100);
+	// delay(100);
 
 }
 

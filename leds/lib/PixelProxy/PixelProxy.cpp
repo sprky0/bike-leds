@@ -6,7 +6,7 @@
 
 // there's also pin and some other crap in the constructor for NeoPixel library
 PixelProxy::PixelProxy() {
-	// pixels = int[TOTAL_PIXEL_COUNT][3];
+	// pixels = int[STRIP_PIXEL_LENGTH][3];
 }
 
 void PixelProxy::setBrightness(int b) {

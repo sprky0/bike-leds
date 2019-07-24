@@ -1,18 +1,15 @@
-// @todo reconcile this: we have some dupes and crap
 
-#define TOTAL_PIXEL_COUNT 300
 #define PRACTICAL_PIXEL_COUNT 300
-#define MAX_SNAKES 300
+#define MAX_SNAKES 2
 #define STRIP_PIXEL_LENGTH 300
 #define PIXEL_PIN 6
-
 
 #include <Arduino.h>
 #include <Adafruit_NeoPixel.h>
 #include "PixelProxy.h"
 #include "Snake.h"
-
-
+//
+//
 int mode = 0;
 
 //
@@ -32,13 +29,25 @@ int maxG = 0;
 int minB = 0;
 int maxB = 255;
 
-Adafruit_NeoPixel strip(STRIP_PIXEL_LENGTH, PIXEL_PIN, NEO_GRB + NEO_KHZ800);
-Snake snakes[MAX_SNAKES]; //  = Snake[MAX_SNAKES];
 //
+Adafruit_NeoPixel strip(STRIP_PIXEL_LENGTH, PIXEL_PIN, NEO_GRB + NEO_KHZ800);
+Snake snakes[2]; // MAX_SNAKES]; //  = Snake[MAX_SNAKES];
+
 void setup() {
+
+	Serial.println("Setup starting!");
 
 	// reserve memory for snakes
 	populateSnakes();
+
+	snakes[0] = Snake(
+		0,
+		1,
+		1,
+
+		255, 0, 0
+	);
+	snakes[0].setActive();
 
 	// set up strip proxy - the thing we directly interact with to set 'pixels' along the range
 	// should be done above before setup
@@ -54,6 +63,10 @@ void setup() {
 	}
 
 	strip.show();  // Initialize all pixels to 'off'
+
+	Serial.begin(9600);
+
+	Serial.println("Setup all set!");
 
 }
 //
@@ -154,6 +167,8 @@ void loop() {
 	previousMillis = millis();
 	cycleMillis += elapsed;
 
+
+	Serial.println("Loop!");
 	// updateDisplay();
 
 }
@@ -174,6 +189,7 @@ void updateDisplay(double elapsed) {
 		int startP = snakes[i].getPixel();
 
 		for (int j = 0; j < snakes[i].getLength(); j++) {
+			Serial.println(j);
 			// proxy.setPixelColor((startP + j) % PRACTICAL_PIXEL_COUNT, snakes[i].getRAt(j), snakes[i].getGAt(j), snakes[i].getBAt(j));
 			proxy.setPixelColorAdditive((startP + j) % PRACTICAL_PIXEL_COUNT, snakes[i].getRAt(j), snakes[i].getGAt(j), snakes[i].getBAt(j));
 		}
@@ -184,10 +200,14 @@ void updateDisplay(double elapsed) {
 
 	// set all default to black
 	for(int i = 0; i < PRACTICAL_PIXEL_COUNT; i++) {
-		strip.setPixelColor(i, proxy.getGAt(i), proxy.getRAt(i), proxy.getBAt(i));
+		// strip.setPixelColor(i, random(1,255), random(1,255), random(1,255)); // proxy.getGAt(i), proxy.getRAt(i), proxy.getBAt(i));
+		strip.setPixelColor(i, proxy.getGAt(i), proxy.getRAt(i), proxy.getBAt(i) );
 	}
 
+	Serial.println("show pixels now");
 	strip.show();
+
+	delay(100);
 
 }
 
@@ -341,7 +361,7 @@ void regularSnakes() {
 
 		// snakes[i].setFriction(0);
 
-		if (curPixel < TOTAL_PIXEL_COUNT) {
+		if (curPixel < STRIP_PIXEL_LENGTH) {
 			curPixel += snakeSpacing;
 			snakes[i].setActive();
 		} else {
@@ -358,7 +378,7 @@ void freshSnakes() {
 	for(int i = 0; i < MAX_SNAKES; i++) {
 		snakes[i] = Snake(
 			// starting pixel
-			(int) random(0,TOTAL_PIXEL_COUNT),
+			(int) random(0,STRIP_PIXEL_LENGTH),
 			// length
 			(int) random(1, 10),
 			// speed

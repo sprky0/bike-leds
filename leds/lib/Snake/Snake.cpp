@@ -31,6 +31,8 @@ Snake::Snake() {
 	clr[0] = 0;
 	clr[1] = 0;
 	clr[2] = 0;
+
+	Serial.println("SNAKE");
 }
 
 Snake::Snake(int startPixel, int lengthInPixels, float velocityPixelsPerSecond, int r, int g, int b) {
@@ -44,6 +46,8 @@ Snake::Snake(int startPixel, int lengthInPixels, float velocityPixelsPerSecond, 
 	clr[0] = r;
 	clr[1] = g;
 	clr[2] = b;
+
+	Serial.println("SNAKE");
 }
 
 void Snake::setPixel(int pixel) {

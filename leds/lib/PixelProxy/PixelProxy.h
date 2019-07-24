@@ -1,9 +1,11 @@
 #include <Arduino.h>
 
+#ifndef STRIP_PIXEL_LENGTH
+#define STRIP_PIXEL_LENGTH 10
+#endif
+
 #ifndef PIXELPROXY_H
 #define PIXELPROXY_H
-
-#define TOTAL_PIXEL_COUNT 300
 
 /**
  * Class that simulates approximately what NeoPixel lib has for its API
@@ -14,8 +16,8 @@ class PixelProxy {
 	public:
 
 		int brightness = 255;
-		int pixels[TOTAL_PIXEL_COUNT][3];
-		int pixelCount = TOTAL_PIXEL_COUNT;
+		int pixels[STRIP_PIXEL_LENGTH][3];
+		int pixelCount = STRIP_PIXEL_LENGTH;
 
 		// there's also pin and some other crap in the constructor for NeoPixel library
 		PixelProxy();

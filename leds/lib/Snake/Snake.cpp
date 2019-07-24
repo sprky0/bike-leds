@@ -4,35 +4,18 @@
 #ifndef SNAKE_CPP
 #define SNAKE_CPP
 
-// class Snake {
-
-	// float p = 0; // you can be between 2 pixels but getPixel will deal with it
-	// float v = 0; // velocity
-	// float f = 0; // friction
-	//
-	// double bornMillis = -1;
-	// double lifetimeMS = -1;
-//	int [] clr = new int[3];
-	// int snakeLength = 1; // in pixels
-	// boolean _protected = false;
-	// boolean _active = false;
-	//
-	// // what kind of thing is this fucker?  (eg: blinky boy, fader slowly, wwhatever)
-	// // maybe also include some notion of trailing off at the edges
-	//
-	// int mode = 1; // fades away from velcotiy
-	// // int mode = 0; // does nothing
-
 Snake::Snake() {
+
 	bornMillis = millis();
+
 	setPixel(0);
 	setVelocity(0);
 	snakeLength = 1;
+
+	// Default to 0,0,0 black
 	clr[0] = 0;
 	clr[1] = 0;
 	clr[2] = 0;
-
-	Serial.println("SNAKE");
 }
 
 Snake::Snake(int startPixel, int lengthInPixels, float velocityPixelsPerSecond, int r, int g, int b) {
@@ -43,11 +26,12 @@ Snake::Snake(int startPixel, int lengthInPixels, float velocityPixelsPerSecond, 
 	setPixel(startPixel);
 	setVelocity(velocityPixelsPerSecond);
 	snakeLength = lengthInPixels;
+
+	// Set color to r,g,b
 	clr[0] = r;
 	clr[1] = g;
 	clr[2] = b;
 
-	Serial.println("SNAKE");
 }
 
 void Snake::setPixel(int pixel) {
@@ -118,11 +102,10 @@ int Snake::getPixel() {
 }
 
 int Snake::chanelValueAt(int pos, int channelValue) {
-	switch(mode) {
+	switch(snakeDisplayMode) {
 		default:
 		case 0:
 			return channelValue;
-			// break;
 		case 1:
 			float scaleValue = ((float) snakeLength - (float) pos) / (float) snakeLength;
 			if (v > 0) {

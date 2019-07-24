@@ -1,27 +1,36 @@
-
+// Pixel configuration relative to strip length
 #define PRACTICAL_PIXEL_COUNT 300
-#define MAX_SNAKES 2
+#define MAX_SNAKES 100
 #define STRIP_PIXEL_LENGTH 300
 #define PIXEL_PIN 6
+
+// Display modes - eg: all lights off, blinking, cycling, whatever
+#define DEFAULT_MODE 0
+#define MODE_PARKED  0
+
+// Pixel drawing modes (add overlapping dudes or replace)
+#define ADDITIVE_MODE    0
+#define REPLACEMENT_MODE 1
 
 #include <Arduino.h>
 #include <Adafruit_NeoPixel.h>
 #include "PixelProxy.h"
 #include "Snake.h"
-//
-//
-int mode = 0;
 
-//
-PixelProxy proxy = PixelProxy();
+// Current display mode
+int displayMode = DEFAULT_MODE;
+
+// Current pixel drawing mode
+int printMode = ADDITIVE_MODE;
+
 //
 double previousMillis = 0;
 double cycleMillis = 0;
-//
-//
-// int maxSnakes = 300; // we don't really need more than we have pixels right ?
-// int snakeCount = 0; //
-//
+
+Snake snakes[MAX_SNAKES];
+PixelProxy proxy = PixelProxy();
+Adafruit_NeoPixel strip(STRIP_PIXEL_LENGTH, PIXEL_PIN, NEO_GRB + NEO_KHZ800);
+
 int minR = 100;
 int maxR = 255;
 int minG = 0;
@@ -29,32 +38,26 @@ int maxG = 0;
 int minB = 0;
 int maxB = 255;
 
-//
-Adafruit_NeoPixel strip(STRIP_PIXEL_LENGTH, PIXEL_PIN, NEO_GRB + NEO_KHZ800);
-Snake snakes[2]; // MAX_SNAKES]; //  = Snake[MAX_SNAKES];
 
 void setup() {
 
+	Serial.begin(9600);
 	Serial.println("Setup starting!");
 
-	// reserve memory for snakes
+	// Reserve memory for snakes
 	populateSnakes();
 
-	snakes[0] = Snake(
-		0,
-		1,
-		1,
+	for (int i = 0; i < MAX_SNAKES; i++) {
 
-		255, 0, 0
-	);
-	snakes[0].setActive();
+		snakes[i] = Snake(
+			i,
+			1, // 1 pixel
+			1, // 1 pixel per second
+			255, 0, 0 // red
+		);
+		snakes[i].setActive();
 
-	// set up strip proxy - the thing we directly interact with to set 'pixels' along the range
-	// should be done above before setup
-	// proxy.setXYZ whatever
-
-	// set up actual Adafruit LED library - the thing we 'print' to by asking PixelProxy for values
-	// strip = new ...etc...
+	}
 
 	strip.begin(); // Initialize NeoPixel strip object (REQUIRED)
 
@@ -64,20 +67,23 @@ void setup() {
 
 	strip.show();  // Initialize all pixels to 'off'
 
-	Serial.begin(9600);
-
 	Serial.println("Setup all set!");
 
 }
-//
+
+
 void loop() {
+
+	Serial.println("(start loop)");
 
 	double elapsed = millis() - previousMillis;
 
+	// Print to LEDs
 	updateDisplay(elapsed);
 
+	// Update state
 	/*
-	switch(mode) {
+	switch(displayMode) {
 
 		// 1225
 
@@ -164,12 +170,11 @@ void loop() {
 
 	}
 	*/
+
 	previousMillis = millis();
 	cycleMillis += elapsed;
 
-
-	Serial.println("Loop!");
-	// updateDisplay();
+	Serial.println("(end loop)");
 
 }
 
@@ -190,8 +195,16 @@ void updateDisplay(double elapsed) {
 
 		for (int j = 0; j < snakes[i].getLength(); j++) {
 			Serial.println(j);
-			// proxy.setPixelColor((startP + j) % PRACTICAL_PIXEL_COUNT, snakes[i].getRAt(j), snakes[i].getGAt(j), snakes[i].getBAt(j));
-			proxy.setPixelColorAdditive((startP + j) % PRACTICAL_PIXEL_COUNT, snakes[i].getRAt(j), snakes[i].getGAt(j), snakes[i].getBAt(j));
+			switch( printMode ) {
+				case ADDITIVE_MODE:
+					proxy.setPixelColorAdditive((startP + j) % PRACTICAL_PIXEL_COUNT, snakes[i].getRAt(j), snakes[i].getGAt(j), snakes[i].getBAt(j));
+					break;
+
+				default:
+				case REPLACEMENT_MODE:
+					proxy.setPixelColor((startP + j) % PRACTICAL_PIXEL_COUNT, snakes[i].getRAt(j), snakes[i].getGAt(j), snakes[i].getBAt(j));
+					break;
+			}
 		}
 
 		snakes[i].update(elapsed, PRACTICAL_PIXEL_COUNT);

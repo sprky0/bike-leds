@@ -3,6 +3,13 @@
 #ifndef SNAKE_H
 #define SNAKE_H
 
+// Color is solid
+#define SOLID_COLOR_MODE          0
+// Color fades down away from velocity
+#define INOUT_FADE_COLOR_MODE     1
+// Color fades up, then back down
+#define OUTINOUT_FADE_COLOR_MODE  2
+
 class Snake {
 
 	public:
@@ -21,8 +28,8 @@ class Snake {
 		// what kind of thing is this fucker?  (eg: blinky boy, fader slowly, wwhatever)
 		// maybe also include some notion of trailing off at the edges
 
-		int mode = 1; // fades away from velcotiy
-		// int mode = 0; // does nothing
+
+		int snakeDisplayMode = INOUT_FADE_COLOR_MODE; // fades away from the direction of velcity
 
 		Snake();
 		Snake(int startPixel, int lengthInPixels, float velocityPixelsPerSecond, int r, int g, int b);

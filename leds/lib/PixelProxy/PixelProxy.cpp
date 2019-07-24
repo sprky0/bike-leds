@@ -1,13 +1,14 @@
 #include <Arduino.h>
 #include "PixelProxy.h"
 
+#ifndef PRACTICAL_PIXEL_COUNT
+#define PRACTICAL_PIXEL_COUNT 300
+#endif
+
 #ifndef PIXELPROXY_CPP
 #define PIXELPROXY_CPP
 
-// there's also pin and some other crap in the constructor for NeoPixel library
-PixelProxy::PixelProxy() {
-	// pixels = int[STRIP_PIXEL_LENGTH][3];
-}
+PixelProxy::PixelProxy() {}
 
 void PixelProxy::setBrightness(int b) {
 	if (b >= 0 && b < 255)
@@ -16,17 +17,22 @@ void PixelProxy::setBrightness(int b) {
 
 void PixelProxy::setPixelColor(int pixel, int r, int g, int b) {
 
-	// this was to ensure we don't get out of bounds Exceptions
-	// if (pixel >= 0 && pixel < totalPixelCount) {
-	pixels[pixel][0] = r;
-	pixels[pixel][1] = g;
-	pixels[pixel][2] = b;
-	// }
+	if (pixel >= 0 && pixel < PRACTICAL_PIXEL_COUNT) {
+
+		pixels[pixel][0] = r;
+		pixels[pixel][1] = g;
+		pixels[pixel][2] = b;
+
+	} else {
+		// Serial.print(pixel);
+		// Serial.println(" out of range .setPixelColor");
+	}
+
 }
 
 void PixelProxy::setPixelColorAdditive(int pixel, int r, int g, int b) {
 
-	// if (pixel >= 0 && pixel < totalPixelCount) {
+	if (pixel >= 0 && pixel < PRACTICAL_PIXEL_COUNT) {
 
 		pixels[pixel][0] = pixels[pixel][0] + r;
 		pixels[pixel][1] = pixels[pixel][1] + g;
@@ -41,7 +47,10 @@ void PixelProxy::setPixelColorAdditive(int pixel, int r, int g, int b) {
 		if (pixels[pixel][2] > 255)
 			pixels[pixel][2] = 255;
 
-	// }
+	} else {
+		// Serial.print(pixel);
+		// Serial.println(" out of range .setPixelColorAdditive");
+	}
 }
 
 int PixelProxy::getRAt(int pixel) {

@@ -46,7 +46,7 @@ void Snake::setFriction(float frictionPerSecond) {
 	f = frictionPerSecond;
 }
 
-void Snake::setLifetime(double lifetime) {
+void Snake::setLifetime(unsigned long lifetime) {
 	lifetimeMS = lifetime;
 }
 
@@ -67,8 +67,7 @@ void Snake::setUnprotected() {
 }
 
 // passing elapsed time so we don't need to internally calculate it on each snake
-void Snake::update(double elapsed, int pixelCount) {
-
+void Snake::update(unsigned long elapsed, int pixelCount) {
 
 	p = 0;
 	v = 0;
@@ -76,7 +75,7 @@ void Snake::update(double elapsed, int pixelCount) {
 	// p = (p + ((float) (elapsed / 1000) * v));
 	// p *= 1 - ((float) (elapsed / 1000) * f);
 	// v *= 1 - ((float) (elapsed / 1000) * f);
-
+	//
 	while (p < 0)
 		p = pixelCount + p;
 

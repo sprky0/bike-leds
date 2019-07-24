@@ -1,16 +1,16 @@
 // Pixel configuration relative to strip length
 #define PRACTICAL_PIXEL_COUNT 300
-#define MAX_SNAKES 150
+#define MAX_SNAKES 100
 #define STRIP_PIXEL_LENGTH 300
 #define PIXEL_PIN 6
 
 // Display modes - eg: all lights off, blinking, cycling, whatever
-#define DEFAULT_MODE 0
-#define MODE_PARKED  0
+#define DISPLAY_DEFAULT_MODE 0
+#define DISPLAY_PARKED_MODE  0
 
 // Pixel drawing modes (add overlapping dudes or replace)
-#define ADDITIVE_MODE    0
-#define REPLACEMENT_MODE 1
+#define PIXEL_ADDITIVE_MODE    0
+#define PIXEL_REPLACEMENT_MODE 1
 
 #include <Arduino.h>
 #include <Adafruit_NeoPixel.h>
@@ -18,14 +18,15 @@
 #include "Snake.h"
 
 // Current display mode
-int displayMode = DEFAULT_MODE;
+int displayMode = DISPLAY_DEFAULT_MODE;
 
 // Current pixel drawing mode
-int printMode = ADDITIVE_MODE;
+int printMode = PIXEL_ADDITIVE_MODE;
 
 //
-long previousMillis = 0;
-long cycleMillis = 0;
+unsigned long previousMillis = 0;
+unsigned long cycleMS = 0;
+unsigned long elapsedMS = 0;
 
 Snake snakes[MAX_SNAKES];
 PixelProxy proxy = PixelProxy();
@@ -37,6 +38,8 @@ int minG = 0;
 int maxG = 0;
 int minB = 0;
 int maxB = 255;
+
+int frameCount = 0;
 
 void setup() {
 
@@ -50,12 +53,15 @@ void setup() {
 
 		snakes[i] = Snake(
 			i,
-			1, // 1 pixel
-			1, // 1 pixel per second
+			5, // 1 pixel
+			5, // 1 pixel per second
 			255, 0, 0 // red
 		);
-		snakes[i].setActive();
+		snakes[i].setInactive();
+	}
 
+	for(int i = 0; i < 10; i++) {
+		snakes[i].setActive();
 	}
 
 	strip.begin(); // Initialize NeoPixel strip object (REQUIRED)
@@ -74,11 +80,25 @@ void setup() {
 void loop() {
 
 	// Serial.println("(start loop)");
+	elapsedMS = millis() - previousMillis;
+	previousMillis = millis();
 
-	long elapsed = millis() - previousMillis;
+	// switch mode here -- eg: fade in / out or solid colors or whatever vs snakemode
+
+	switch (displayMode) {
+
+		case DISPLAY_PARKED_MODE:
+			updateProxyParked(elapsedMS);
+			break;
+
+		case DISPLAY_DEFAULT_MODE:
+		default:
+			updateProxyFromSnakes(elapsedMS);
+			break;
+	}
 
 	// Print to LEDs
-	updateDisplay(elapsed);
+	updateDisplay();
 
 	// Update state
 	/*
@@ -87,7 +107,7 @@ void loop() {
 		// 1225
 
 		case 1223:
-			if (cycleMillis > 500) {
+			if (cycleMS > 500) {
 				// explodeSnake();
 				int snakeIndex = getFreeSnakeIndex();
 				snakes[snakeIndex] = Snake(
@@ -101,12 +121,12 @@ void loop() {
 				snakes[snakeIndex].setActive();
 				snakes[snakeIndex].setLifetime(10000);
 
-				cycleMillis = 0;
+				cycleMS = 0;
 			}
 		break;
 
 		case 1224:
-			if (cycleMillis > 500) {
+			if (cycleMS > 500) {
 				// explodeSnake();
 				int snakeIndex = getFreeSnakeIndex();
 				snakes[snakeIndex] = Snake(
@@ -144,7 +164,7 @@ void loop() {
 				snakes[snakeIndex].setActive();
 				snakes[snakeIndex].setLifetime(10000);
 
-				cycleMillis = 0;
+				cycleMS = 0;
 			}
 		break;
 
@@ -152,7 +172,7 @@ void loop() {
 		case 1111:
 
 			// switch mode outside this matybe ? diff modes have diff timing i guess
-			if (cycleMillis > 250) {
+			if (cycleMS > 250) {
 
 				addARandomSnake();
 
@@ -162,7 +182,7 @@ void loop() {
 						explodeSnake(sploder);
 				}
 
-				cycleMillis = 0;
+				cycleMS = 0;
 			}
 
 		break;
@@ -170,14 +190,29 @@ void loop() {
 	}
 	*/
 
-	previousMillis = millis();
-	cycleMillis += elapsed;
+	cycleMS += elapsedMS;
+
+	if (cycleMS >= 1000) {
+		Serial.println(frameCount);
+		frameCount = 0;
+		cycleMS = 0;
+	}
 
 	// Serial.println("(end loop)");
-	Serial.println(elapsed);
+	// Serial.println(elapsedMS);
+
 }
 
-void updateDisplay(double elapsed) {
+void updateProxyParked(unsigned long elapsed) {
+
+	// set all default to black
+	for(int i = 0; i < PRACTICAL_PIXEL_COUNT; i++) {
+		proxy.setPixelColor(i,0,0,0);
+	}
+
+}
+
+void updateProxyFromSnakes(unsigned long elapsed) {
 
 	// set all default to black
 	for(int i = 0; i < PRACTICAL_PIXEL_COUNT; i++) {
@@ -192,20 +227,15 @@ void updateDisplay(double elapsed) {
 
 		int startP = snakes[i].getPixel();
 
-		// Serial.print("Pixel drawing for snake ");
-		// Serial.print(i);
-		// Serial.print(" at pixel ");
-		// Serial.println(startP);
-
 		for (int j = 0; j < snakes[i].getLength(); j++) {
 
 			switch( printMode ) {
-				case ADDITIVE_MODE:
+				case PIXEL_ADDITIVE_MODE:
 					proxy.setPixelColorAdditive((startP + j) % PRACTICAL_PIXEL_COUNT, snakes[i].getRAt(j), snakes[i].getGAt(j), snakes[i].getBAt(j));
 					break;
 
 				default:
-				case REPLACEMENT_MODE:
+				case PIXEL_REPLACEMENT_MODE:
 					proxy.setPixelColor((startP + j) % PRACTICAL_PIXEL_COUNT, snakes[i].getRAt(j), snakes[i].getGAt(j), snakes[i].getBAt(j));
 					break;
 
@@ -216,16 +246,17 @@ void updateDisplay(double elapsed) {
 
 	}
 
+}
+
+void updateDisplay() {
+
 	// set all default to black
 	for(int i = 0; i < PRACTICAL_PIXEL_COUNT; i++) {
-		// strip.setPixelColor(i, random(1,255), random(1,255), random(1,255)); // proxy.getGAt(i), proxy.getRAt(i), proxy.getBAt(i));
 		strip.setPixelColor(i, proxy.getGAt(i), proxy.getRAt(i), proxy.getBAt(i) );
 	}
 
-	// Serial.println("updateDisplay() - will show pixels now");
 	strip.show();
-
-	// delay(100);
+	frameCount++; // "frame" meaning one single change to the active state of the strip
 
 }
 
@@ -324,16 +355,15 @@ void regularSnakes() {
 
 	int curPixel = 0;
 
-	int _r = (int) random(0,255);
-	int _g = (int) random(0,255);
-	int _b = (int) random(0,255);
-	int _dirR = (int) 1;
-	int _dirG = (int) 1;
-	int _dirB = (int) 1;
+	int _r = random(0,255);
+	int _g = random(0,255);
+	int _b = random(0,255);
+	int _dirR = 1;
+	int _dirG = 1;
+	int _dirB = 1;
 
 	int snakeLength = (int) random(1,10);
 	int snakeSpacing = snakeLength * (int) random(2,10);
-
 
 	for(int i = 0; i < MAX_SNAKES; i++) {
 

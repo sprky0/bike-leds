@@ -18,8 +18,8 @@ class Snake {
 		float v = 0; // velocity
 		float f = 0; // friction
 
-		double bornMillis = -1;
-		double lifetimeMS = -1;
+		unsigned long bornMillis = -1;
+		unsigned long lifetimeMS = -1;
 		int clr[3] = {0,0,0};
 		int snakeLength = 1; // in pixels
 		boolean _protected = false;
@@ -37,12 +37,12 @@ class Snake {
 		void setPixel(int pixel);
 		void setVelocity(float velocityPixelsPerSecond);
 		void setFriction(float frictionPerSecond);
-		void setLifetime(double lifetime);
+		void setLifetime(unsigned long lifetime);
 		void setActive();
 		void setInactive();
 		void setProtected();
 		void setUnprotected();
-		void update(double elapsed, int pixelCount);
+		void update(unsigned long elapsed, int pixelCount);
 		float getVelocity();
 		int getLength();
 		int getPixel();

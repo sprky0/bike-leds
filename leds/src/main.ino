@@ -407,8 +407,6 @@ void regularSnakes() {
 			_dirB = 1;
 		}
 
-		// snakes[i].setFriction(0);
-
 		if (curPixel < STRIP_PIXEL_LENGTH) {
 			curPixel += snakeSpacing;
 			snakes[i].setActive();

@@ -29,7 +29,7 @@ class Snake {
 		// maybe also include some notion of trailing off at the edges
 
 
-		int snakeDisplayMode = INOUT_FADE_COLOR_MODE; // fades away from the direction of velcity
+		int snakeDisplayMode = SOLID_COLOR_MODE; // fades away from the direction of velcity
 
 		Snake();
 		Snake(int startPixel, int lengthInPixels, float velocityPixelsPerSecond, int r, int g, int b);

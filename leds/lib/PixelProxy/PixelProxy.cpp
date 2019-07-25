@@ -17,6 +17,15 @@ void PixelProxy::setBrightness(int b) {
 
 void PixelProxy::setPixelColor(int pixel, int r, int g, int b) {
 
+	// Serial.print("p ");
+	// Serial.print(pixel);
+	// Serial.print(" to ");
+	// Serial.print(r);
+	// Serial.print(",");
+	// Serial.print(g);
+	// Serial.print(",");
+	// Serial.println(b);
+
 	if (pixel >= 0 && pixel < PRACTICAL_PIXEL_COUNT) {
 
 		pixels[pixel][0] = r;

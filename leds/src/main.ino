@@ -1,12 +1,13 @@
 // Pixel configuration relative to strip length
+#define PIXEL_PIN 6
+#define STRIP_PIXEL_LENGTH 300
 #define PRACTICAL_PIXEL_COUNT 300
 #define MAX_SNAKES 100
-#define STRIP_PIXEL_LENGTH 300
-#define PIXEL_PIN 6
+
 
 // Display modes - eg: all lights off, blinking, cycling, whatever
 #define DISPLAY_DEFAULT_MODE 0
-#define DISPLAY_PARKED_MODE  0
+#define DISPLAY_PARKED_MODE  1
 
 // Pixel drawing modes (add overlapping dudes or replace)
 #define PIXEL_ADDITIVE_MODE    0
@@ -43,7 +44,7 @@ int frameCount = 0;
 
 void setup() {
 
-	Serial.begin(9600);
+	Serial.begin(115200);
 	Serial.println("Setup starting!");
 
 	// Reserve memory for snakes
@@ -53,14 +54,14 @@ void setup() {
 
 		snakes[i] = Snake(
 			i,
-			5, // 1 pixel
-			5, // 1 pixel per second
-			255, 0, 0 // red
+			10,
+			200,
+			255, 0, 0
 		);
 		snakes[i].setInactive();
 	}
 
-	for(int i = 0; i < 10; i++) {
+	for(int i = 0; i < 1; i++) {
 		snakes[i].setActive();
 	}
 
@@ -231,6 +232,18 @@ void updateProxyFromSnakes(unsigned long elapsed) {
 
 			switch( printMode ) {
 				case PIXEL_ADDITIVE_MODE:
+
+				Serial.print(i);
+				Serial.print(".");
+				Serial.print(j);
+				Serial.print(" at ");
+				Serial.print(snakes[i].getRAt(j));
+				Serial.print(",");
+				Serial.print(snakes[i].getGAt(j));
+				Serial.print(";");
+				Serial.println(snakes[i].getBAt(j));
+
+
 					proxy.setPixelColorAdditive((startP + j) % PRACTICAL_PIXEL_COUNT, snakes[i].getRAt(j), snakes[i].getGAt(j), snakes[i].getBAt(j));
 					break;
 
@@ -252,7 +265,7 @@ void updateDisplay() {
 
 	// set all default to black
 	for(int i = 0; i < PRACTICAL_PIXEL_COUNT; i++) {
-		strip.setPixelColor(i, proxy.getGAt(i), proxy.getRAt(i), proxy.getBAt(i) );
+		strip.setPixelColor(i, proxy.getRAt(i), proxy.getGAt(i), proxy.getBAt(i) );
 	}
 
 	strip.show();

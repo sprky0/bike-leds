@@ -2,7 +2,7 @@
 #define PIXEL_PIN 6
 #define STRIP_PIXEL_LENGTH 300
 #define PRACTICAL_PIXEL_COUNT 300
-#define MAX_SNAKES 100
+#define MAX_SNAKES 5
 
 
 // Display modes - eg: all lights off, blinking, cycling, whatever
@@ -50,18 +50,27 @@ void setup() {
 	// Reserve memory for snakes
 	populateSnakes();
 
-	for (int i = 0; i < MAX_SNAKES; i++) {
+	/*for (int i = 0; i < MAX_SNAKES; i++) {
 
 		snakes[i] = Snake(
 			i,
-			10,
-			200,
-			255, 0, 0
+			1,
+			0,
+			0, 0, 0
 		);
 		snakes[i].setInactive();
-	}
 
-	for(int i = 0; i < 1; i++) {
+	}*/
+
+	for(int i = 0; i < MAX_SNAKES; i++) {
+
+		snakes[i] = Snake(
+			random(0, STRIP_PIXEL_LENGTH),
+			random(0,50),
+			-100 + random(0,200),
+			random(0,255), random(0,255), random(0,255)
+		);
+
 		snakes[i].setActive();
 	}
 
@@ -233,16 +242,16 @@ void updateProxyFromSnakes(unsigned long elapsed) {
 			switch( printMode ) {
 				case PIXEL_ADDITIVE_MODE:
 
-				Serial.print(i);
-				Serial.print(".");
-				Serial.print(j);
-				Serial.print(" at ");
-				Serial.print(snakes[i].getRAt(j));
-				Serial.print(",");
-				Serial.print(snakes[i].getGAt(j));
-				Serial.print(";");
-				Serial.println(snakes[i].getBAt(j));
-
+				// Serial.print(i);
+				// Serial.print(".");
+				// Serial.print(j);
+				// Serial.print(" at ");
+				// Serial.print(snakes[i].getRAt(j));
+				// Serial.print(",");
+				// Serial.print(snakes[i].getGAt(j));
+				// Serial.print(";");
+				// Serial.println(snakes[i].getBAt(j));
+				//
 
 					proxy.setPixelColorAdditive((startP + j) % PRACTICAL_PIXEL_COUNT, snakes[i].getRAt(j), snakes[i].getGAt(j), snakes[i].getBAt(j));
 					break;

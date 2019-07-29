@@ -8,7 +8,9 @@
 // Color fades down away from velocity
 #define INOUT_FADE_COLOR_MODE     1
 // Color fades up, then back down
-#define OUTINOUT_FADE_COLOR_MODE  2
+// #define OUTINOUT_FADE_COLOR_MODE  2
+// Color fades up away from velocity
+// #define OUTIN_FADE_COLOR_MODE     3
 
 class Snake {
 
@@ -29,7 +31,7 @@ class Snake {
 		// maybe also include some notion of trailing off at the edges
 
 
-		int snakeDisplayMode = SOLID_COLOR_MODE; // fades away from the direction of velcity
+		int snakeDisplayMode = INOUT_FADE_COLOR_MODE; // fades away from the direction of velcity
 
 		Snake();
 		Snake(int startPixel, int lengthInPixels, float velocityPixelsPerSecond, int r, int g, int b);

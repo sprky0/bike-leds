@@ -129,6 +129,16 @@ int Snake::chanelValueAt(int pos, int channelValue) {
 			}
 			float channelScaledValue = scaleValue * (float) channelValue;
 			return (int) channelScaledValue;
+		// case 2:
+		// 	float scaleValue = ((float) snakeLength - (float) pos) / (float) snakeLength;
+		// 	if (v > 0) {
+		// 		scaleValue = 1 - scaleValue;
+		// 	}
+		//
+		// 	scaleValue = abs( .5 - scaleValue );
+		//
+		// 	float channelScaledValue = scaleValue * (float) channelValue;
+		// 	return (int) channelScaledValue;
 	}
 }
 

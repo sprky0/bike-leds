@@ -1,22 +1,37 @@
+// Interface pins
+#define BUTTON_PIN_UP     7
+#define BUTTON_PIN_DOWN   8
+#define BUTTON_PIN_REMOTE 9
+#define POTENTIOMETER_PIN 0
+// ^ what is the value of A0 ? 0 ?  maybe ?
+
 // Pixel configuration relative to strip length
 #define PIXEL_PIN 6
 #define STRIP_PIXEL_LENGTH 300
 #define PRACTICAL_PIXEL_COUNT 300
 #define MAX_SNAKES 5
 
-
 // Display modes - eg: all lights off, blinking, cycling, whatever
-#define DISPLAY_DEFAULT_MODE 0
-#define DISPLAY_PARKED_MODE  1
+
+// Pending more - powered on but not doing anything
+#define DISPLAY_MODE_PENDING 0
+// Parked mode - minimal lighting, enough to be visible at night
+#define DISPLAY_MODE_PARKED  1
+// Find: Remote control make the bike flash a lot
+#define DISPLAY_MODE_FIND    2
+// Snakes!!!!
+#define DISPLAY_MODE_SNAKES  3
 
 // Pixel drawing modes (add overlapping dudes or replace)
 #define PIXEL_ADDITIVE_MODE    0
 #define PIXEL_REPLACEMENT_MODE 1
 
+// Include libraries
 #include <Arduino.h>
 #include <Adafruit_NeoPixel.h>
 #include "PixelProxy.h"
 #include "Snake.h"
+#include "Button.h"
 
 // Current display mode
 int displayMode = DISPLAY_DEFAULT_MODE;
@@ -24,14 +39,21 @@ int displayMode = DISPLAY_DEFAULT_MODE;
 // Current pixel drawing mode
 int printMode = PIXEL_ADDITIVE_MODE;
 
-//
+// Animation timing variables
 unsigned long previousMillis = 0;
 unsigned long cycleMS = 0;
 unsigned long elapsedMS = 0;
 
+// Particles, and display
 Snake snakes[MAX_SNAKES];
 PixelProxy proxy = PixelProxy();
 Adafruit_NeoPixel strip(STRIP_PIXEL_LENGTH, PIXEL_PIN, NEO_GRB + NEO_KHZ800);
+
+Button upButton     = Button(BUTTON_PIN_UP);
+Button downButton   = Button(BUTTON_PIN_DOWN);
+Button remoteButton = Button(BUTTON_PIN_REMOTE);
+
+int potentiometer = 0; // 0 - 1023
 
 int minR = 100;
 int maxR = 255;
@@ -50,22 +72,11 @@ void setup() {
 	// Reserve memory for snakes
 	populateSnakes();
 
-	/*for (int i = 0; i < MAX_SNAKES; i++) {
-
-		snakes[i] = Snake(
-			i,
-			1,
-			0,
-			0, 0, 0
-		);
-		snakes[i].setInactive();
-
-	}*/
-
+	//
 	for(int i = 0; i < MAX_SNAKES; i++) {
 
 		snakes[i] = Snake(
-			random(0, STRIP_PIXEL_LENGTH),
+			random(0, PRACTICAL_PIXEL_COUNT),
 			random(0,50),
 			-100 + random(0,200),
 			random(0,255), random(0,255), random(0,255)
@@ -76,6 +87,7 @@ void setup() {
 
 	strip.begin(); // Initialize NeoPixel strip object (REQUIRED)
 
+	// zero out entire strip
 	for(int i = 0; i < STRIP_PIXEL_LENGTH; i++) {
 		strip.setPixelColor(i , 0, 0, 0);
 	}
@@ -92,19 +104,51 @@ void loop() {
 	elapsedMS = millis() - previousMillis;
 	previousMillis = millis();
 
-	readInterface();
-
+	// readInterface();
 	// switch mode here -- eg: fade in / out or solid colors or whatever vs snakemode
+
+	bool hasUpAction = false;
+	bool hasDownAction = false;
+	bool hasRemoteAction = false;
+
+	if (upButton.hasAction()) {
+		upButton.receiveAction();
+		hasUpAction = true;
+		// handle up press here
+	}
+
+	if (downButton.hasAction()) {
+		downButton.receiveAction();
+		hasDownAction = true;
+		// handle up press here
+	}
+
+	if (remoteButton.hasAction()) {
+		remoteButton.receiveAction();
+		hasRemoteAction = true;
+		elapsedMS = 0;
+		displayMode = DISPLAY_MODE_FIND;
+		// handle remote pressed here
+	}
+
 
 	// Update strip proxy from visualizer components (eg: parked thing, particle thing, etc)
 	switch (displayMode) {
 
-		case DISPLAY_PARKED_MODE:
+		case DISPLAY_MODE_PENDING:
+		default:
+			// nothing doing here
+			break;
+
+		case DISPLAY_MODE_FIND:
+			updateProxyFind(elapsedMS);
+			break;
+
+		case DISPLAY_MODE_PARKED:
 			updateProxyParked(elapsedMS);
 			break;
 
-		case DISPLAY_DEFAULT_MODE:
-		default:
+		case DISPLAY_MODE_SNAKES:
 			updateProxyFromSnakes(elapsedMS);
 			break;
 	}
@@ -131,6 +175,12 @@ void updateProxyParked(unsigned long elapsed) {
 	for(int i = 0; i < PRACTICAL_PIXEL_COUNT; i++) {
 		proxy.setPixelColor(i,0,0,0);
 	}
+
+	// update from ??
+
+}
+
+void updateProxyFromIndicator(unsigned long elapsed) {
 
 }
 
@@ -362,5 +412,30 @@ void freshSnakes() {
 		if (random(0,1) > .9)
 			snakes[i].setActive();
 	}
+
+}
+
+void readInterface() {
+
+	//
+	// readInterface();
+	//
+
+	if (upButton.hasAction()) {
+		upButton.receiveAction();
+		// handle up press here
+	}
+
+	if (downButton.hasAction()) {
+		downButton.receiveAction();
+		// handle up press here
+	}
+
+	if (remoteButton.hasAction()) {
+		remoteButton.receiveAction();
+		// handle remote pressed here
+	}
+
+	// read potentiometer here
 
 }

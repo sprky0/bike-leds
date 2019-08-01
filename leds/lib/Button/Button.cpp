@@ -1,8 +1,10 @@
 #include <Arduino.h>
-#include "Example.h"
+#include "Button.h"
 
 #ifndef BUTTON_CPP
 #define BUTTON_CPP
+
+#define DEBOUNCE_DELAY_MS 50
 
 /**
  * Button press including debounce
@@ -25,7 +27,7 @@ void Button::read() {
 		lastDebounceMillis = millis();
 	}
 
-	if ((millis() - lastDebounceMillis) > debounceDelayMS) {
+	if ((millis() - lastDebounceMillis) > DEBOUNCE_DELAY_MS) {
 
 		// whatever the reading is at, it's been there for longer than the debounce
 		// delay, so take it as the actual current state:
@@ -64,27 +66,3 @@ void Button::receiveAction() {
 }
 
 #endif
-
-
-#include <Arduino.h>
-
-#ifndef BUTTON_H
-#define BUTTON_H
-
-// /**
-//  * Basic class to see if I am going crazy
-//  */
-// class Button {
-//
-// 	public:
-//
-// 		Button(uint8_t digitalPin);       // constructor
-// 		void read();   // some member method
-//
-// 	private:
-//
-//
-//
-// };
-//
-// #endif

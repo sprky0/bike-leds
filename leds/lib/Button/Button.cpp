@@ -1,0 +1,90 @@
+#include <Arduino.h>
+#include "Example.h"
+
+#ifndef BUTTON_CPP
+#define BUTTON_CPP
+
+/**
+ * Button press including debounce
+ */
+Button::Button(uint8_t pin) {
+	_pin = pin;
+}
+
+void Button::read() {
+
+	// if actionLastCycle == true
+	// claimAction() ? something like that ? to reset
+
+	// Read the state of the switch into a local variable:
+	bool reading = digitalRead(_pin);
+
+// If the switch changed, due to noise or pressing:
+	if (reading != _lastState) {
+		// reset the debouncing timer
+		lastDebounceMillis = millis();
+	}
+
+	if ((millis() - lastDebounceMillis) > debounceDelayMS) {
+
+		// whatever the reading is at, it's been there for longer than the debounce
+		// delay, so take it as the actual current state:
+
+		// if the button state has changed:
+		if (reading != _state) {
+
+			// this should theoretically happen 1x per debounced change
+
+			_state = reading;
+
+			// Doing this way b/c I don't want to deal with a callback at the moment
+			if (_state == true)
+				_hasPressAction = true; 			// iHaveTheBall ->  noIHaveTheBall() <-- to reset ?  something like that
+
+		}
+
+	}
+
+	_lastState = reading;
+
+}
+
+/**
+ * Is there button work to do?
+ */
+bool Button::hasAction() {
+	return _hasPressAction;
+}
+
+/**
+ * Call it!  "I've got this"
+ */
+void Button::receiveAction() {
+	_hasPressAction = false;
+}
+
+#endif
+
+
+#include <Arduino.h>
+
+#ifndef BUTTON_H
+#define BUTTON_H
+
+// /**
+//  * Basic class to see if I am going crazy
+//  */
+// class Button {
+//
+// 	public:
+//
+// 		Button(uint8_t digitalPin);       // constructor
+// 		void read();   // some member method
+//
+// 	private:
+//
+//
+//
+// };
+//
+// #endif

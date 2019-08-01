@@ -89,12 +89,14 @@ void setup() {
 
 void loop() {
 
-	// Serial.println("(start loop)");
 	elapsedMS = millis() - previousMillis;
 	previousMillis = millis();
 
+	readInterface();
+
 	// switch mode here -- eg: fade in / out or solid colors or whatever vs snakemode
 
+	// Update strip proxy from visualizer components (eg: parked thing, particle thing, etc)
 	switch (displayMode) {
 
 		case DISPLAY_PARKED_MODE:
@@ -107,98 +109,11 @@ void loop() {
 			break;
 	}
 
+	// Update strip proxy from visualizations for user interaction (eg: light up some LEDS for button press or what-have-you)
+	updateProxyFromIndicator(elapsedMS);
+
 	// Print to LEDs
 	updateDisplay();
-
-	// Update state
-	/*
-	switch(displayMode) {
-
-		// 1225
-
-		case 1223:
-			if (cycleMS > 500) {
-				// explodeSnake();
-				int snakeIndex = getFreeSnakeIndex();
-				snakes[snakeIndex] = Snake(
-					0,
-					100,
-					500,
-					(int) random(minR, maxR),
-					(int) random(minG, maxG),
-					(int) random(minB, maxB)
-				);
-				snakes[snakeIndex].setActive();
-				snakes[snakeIndex].setLifetime(10000);
-
-				cycleMS = 0;
-			}
-		break;
-
-		case 1224:
-			if (cycleMS > 500) {
-				// explodeSnake();
-				int snakeIndex = getFreeSnakeIndex();
-				snakes[snakeIndex] = Snake(
-					0,
-					8,
-					25,
-					(int) random(minR, maxR),
-					(int) random(minG, maxG),
-					(int) random(minB, maxB)
-				);
-				snakes[snakeIndex].setActive();
-				snakes[snakeIndex].setLifetime(10000);
-
-				snakeIndex = getFreeSnakeIndex();
-				snakes[snakeIndex] = Snake(
-					0,
-					2,
-					50,
-					(int) random(minR, maxR),
-					(int) random(minG, maxG),
-					(int) random(minB, maxB)
-				);
-				snakes[snakeIndex].setActive();
-				snakes[snakeIndex].setLifetime(10000);
-
-				snakeIndex = getFreeSnakeIndex();
-				snakes[snakeIndex] = Snake(
-					0,
-					1,
-					100,
-					(int) random(minR, maxR),
-					(int) random(minG, maxG),
-					(int) random(minB, maxB)
-				);
-				snakes[snakeIndex].setActive();
-				snakes[snakeIndex].setLifetime(10000);
-
-				cycleMS = 0;
-			}
-		break;
-
-		// default:
-		case 1111:
-
-			// switch mode outside this matybe ? diff modes have diff timing i guess
-			if (cycleMS > 250) {
-
-				addARandomSnake();
-
-				if (random(0,1) > 0.5) {
-					int sploder = getActiveSnakeIndex();
-					if (sploder > 0)
-						explodeSnake(sploder);
-				}
-
-				cycleMS = 0;
-			}
-
-		break;
-
-	}
-	*/
 
 	cycleMS += elapsedMS;
 
@@ -208,9 +123,6 @@ void loop() {
 		cycleMS = 0;
 	}
 
-	// Serial.println("(end loop)");
-	// Serial.println(elapsedMS);
-
 }
 
 void updateProxyParked(unsigned long elapsed) {
@@ -219,6 +131,10 @@ void updateProxyParked(unsigned long elapsed) {
 	for(int i = 0; i < PRACTICAL_PIXEL_COUNT; i++) {
 		proxy.setPixelColor(i,0,0,0);
 	}
+
+}
+
+void updateProxyBackground(unsigned long elapsed) {
 
 }
 
@@ -241,18 +157,6 @@ void updateProxyFromSnakes(unsigned long elapsed) {
 
 			switch( printMode ) {
 				case PIXEL_ADDITIVE_MODE:
-
-				// Serial.print(i);
-				// Serial.print(".");
-				// Serial.print(j);
-				// Serial.print(" at ");
-				// Serial.print(snakes[i].getRAt(j));
-				// Serial.print(",");
-				// Serial.print(snakes[i].getGAt(j));
-				// Serial.print(";");
-				// Serial.println(snakes[i].getBAt(j));
-				//
-
 					proxy.setPixelColorAdditive((startP + j) % PRACTICAL_PIXEL_COUNT, snakes[i].getRAt(j), snakes[i].getGAt(j), snakes[i].getBAt(j));
 					break;
 

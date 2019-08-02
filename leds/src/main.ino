@@ -1,7 +1,7 @@
 // Interface pins
-#define BUTTON_PIN_UP     7
-#define BUTTON_PIN_DOWN   8
-#define BUTTON_PIN_REMOTE 9
+#define BUTTON_PIN_UP     9
+#define BUTTON_PIN_DOWN   10
+#define BUTTON_PIN_REMOTE 8
 #define POTENTIOMETER_PIN 0
 // ^ what is the value of A0 ? 0 ?  maybe ?
 
@@ -34,7 +34,7 @@
 #include "Button.h"
 
 // Current display mode
-int displayMode = DISPLAY_DEFAULT_MODE;
+int displayMode = DISPLAY_MODE_PENDING;
 
 // Current pixel drawing mode
 int printMode = PIXEL_ADDITIVE_MODE;
@@ -53,7 +53,8 @@ Button upButton     = Button(BUTTON_PIN_UP);
 Button downButton   = Button(BUTTON_PIN_DOWN);
 Button remoteButton = Button(BUTTON_PIN_REMOTE);
 
-int potentiometer = 0; // 0 - 1023
+int potVal = 0;
+// int potentiometer = 0; // 0 - 1023
 
 int minR = 100;
 int maxR = 255;
@@ -101,10 +102,22 @@ void setup() {
 
 void loop() {
 
+	// int potval = analogRead(POTENTIOMETER_PIN);
+	// Serial.println(potval);
+	// 681 - 1023 // this range do something with it
+
+	/*
+	Serial.print( digitalRead(BUTTON_PIN_DOWN) );
+	Serial.print(",");
+	Serial.print( digitalRead(BUTTON_PIN_UP) );
+	Serial.print(",");
+	Serial.println( digitalRead(BUTTON_PIN_REMOTE) );
+	*/
+
 	elapsedMS = millis() - previousMillis;
 	previousMillis = millis();
 
-	// readInterface();
+	readInterface();
 	// switch mode here -- eg: fade in / out or solid colors or whatever vs snakemode
 
 	bool hasUpAction = false;
@@ -114,6 +127,8 @@ void loop() {
 	if (upButton.hasAction()) {
 		upButton.receiveAction();
 		hasUpAction = true;
+		Serial.println("UP");
+		displayMode = DISPLAY_MODE_SNAKES;
 		// handle up press here
 	}
 
@@ -121,14 +136,20 @@ void loop() {
 		downButton.receiveAction();
 		hasDownAction = true;
 		// handle up press here
+		Serial.println("DOWN");
+		displayMode = DISPLAY_MODE_PARKED;
 	}
 
 	if (remoteButton.hasAction()) {
 		remoteButton.receiveAction();
 		hasRemoteAction = true;
 		elapsedMS = 0;
-		displayMode = DISPLAY_MODE_FIND;
+		if (displayMode == DISPLAY_MODE_SNAKES)
+			displayMode = DISPLAY_MODE_PARKED; //
+		else
+			displayMode = DISPLAY_MODE_SNAKES;
 		// handle remote pressed here
+		Serial.println("REMOTE");
 	}
 
 
@@ -167,6 +188,10 @@ void loop() {
 		cycleMS = 0;
 	}
 
+}
+
+void updateProxyFind(unsigned long elapsed) {
+	// do some noisy things to show where bike is
 }
 
 void updateProxyParked(unsigned long elapsed) {
@@ -417,25 +442,9 @@ void freshSnakes() {
 
 void readInterface() {
 
-	//
-	// readInterface();
-	//
-
-	if (upButton.hasAction()) {
-		upButton.receiveAction();
-		// handle up press here
-	}
-
-	if (downButton.hasAction()) {
-		downButton.receiveAction();
-		// handle up press here
-	}
-
-	if (remoteButton.hasAction()) {
-		remoteButton.receiveAction();
-		// handle remote pressed here
-	}
-
-	// read potentiometer here
+	upButton.read();
+	downButton.read();
+	remoteButton.read();
+	potVal = analogRead(POTENTIOMETER_PIN);
 
 }

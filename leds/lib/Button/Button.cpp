@@ -21,6 +21,8 @@ void Button::read() {
 	// Read the state of the switch into a local variable:
 	bool reading = digitalRead(_pin);
 
+	// Serial.println( reading );
+
 // If the switch changed, due to noise or pressing:
 	if (reading != _lastState) {
 		// reset the debouncing timer

@@ -42,8 +42,10 @@ void Button::read() {
 			_state = reading;
 
 			// Doing this way b/c I don't want to deal with a callback at the moment
-			if (_state == true)
-				_hasPressAction = true; 			// iHaveTheBall ->  noIHaveTheBall() <-- to reset ?  something like that
+			if (_state == true) {
+				_hasPressAction = true;
+				// iHaveTheBall ->  noIHaveTheBall() <-- to reset ?  something like that
+			}
 
 		}
 

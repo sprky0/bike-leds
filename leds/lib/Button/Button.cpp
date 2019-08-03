@@ -5,7 +5,7 @@
 #define BUTTON_CPP
 
 #define DEBOUNCE_DELAY_MS 50
-#define ACTION_COMPLETE_DELAY_MS 50
+#define ACTION_COMPLETE_DELAY_MS 100
 
 /**
  * Button press including debounce
@@ -44,7 +44,7 @@ void Button::read() {
 
 			// Doing this way b/c I don't want to deal with a callback at the moment
 			if (_state == true) {
-				_hasPressAction = true; 			// iHaveTheBall ->  noIHaveTheBall() <-- to reset ?  something like that
+				// _hasPressAction = true; 			// iHaveTheBall ->  noIHaveTheBall() <-- to reset ?  something like that
 				_lastPressStartMillis = millis();
 			} else if (_state == false) {
 				_lastPressDuration = millis() - _lastPressStartMillis;
@@ -54,6 +54,17 @@ void Button::read() {
 
 		}
 
+	}
+
+	if (!_hasPressAction && _lastPressStartMillis != 0 && _lastPressDuration != 0 && (millis() - _lastPressStartMillis > ACTION_COMPLETE_DELAY_MS)) {
+		// this means we are done with clicky time -- the person has let go and stopped pressing the button for long enough
+		// to consider that a completed button pressing session
+		_hasPressAction = true;
+		Serial.print("PRESS BUTTON TIME IS DONE ");
+		Serial.print(_pressCount);
+		Serial.print(" presses, last one was ");
+		Serial.print(_lastPressDuration);
+		Serial.println("MS");
 	}
 
 	_lastState = reading;
@@ -71,7 +82,7 @@ uint8_t Button::getPressCount() {
 	return _pressCount;
 }
 
-unsigned long getLastPressDuration() {
+unsigned long Button::getLastPressDuration() {
 	return _lastPressDuration;
 }
 
@@ -80,8 +91,8 @@ unsigned long getLastPressDuration() {
  */
 void Button::resetAction() {
 	_hasPressAction = false;
-	lastPressDuration = 0
-	pressCount = 0;
+	_lastPressDuration = 0;
+	_pressCount = 0;
 }
 
 #endif

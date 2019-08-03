@@ -116,6 +116,13 @@ void setup() {
 }
 
 
+
+
+
+int startIterator = 0;
+int endIterator   = 0; // persist outside of loop some shit
+
+
 void loop() {
 
 	// int potval = analogRead(POTENTIOMETER_PIN);
@@ -141,23 +148,22 @@ void loop() {
 	bool hasRemoteAction = false;
 
 	if (upButton.hasAction()) {
-		upButton.receiveAction();
 		hasUpAction = true;
 		Serial.println("UP");
-		displayMode = DISPLAY_MODE_SNAKES;
+		// displayMode = DISPLAY_MODE_SNAKES;
 		// handle up press here
+		upButton.resetAction();
 	}
 
 	if (downButton.hasAction()) {
-		downButton.receiveAction();
 		hasDownAction = true;
 		// handle up press here
 		Serial.println("DOWN");
-		displayMode = DISPLAY_MODE_PARKED;
+		// displayMode = DISPLAY_MODE_PARKED;
+		downButton.resetAction();
 	}
 
 	if (remoteButton.hasAction()) {
-		remoteButton.receiveAction();
 		hasRemoteAction = true;
 		elapsedMS = 0;
 		if (displayMode == DISPLAY_MODE_SNAKES)
@@ -166,6 +172,7 @@ void loop() {
 			displayMode = DISPLAY_MODE_SNAKES;
 		// handle remote pressed here
 		Serial.println("REMOTE");
+		remoteButton.resetAction();
 	}
 
 
@@ -173,9 +180,25 @@ void loop() {
 	switch (displayMode) {
 
 		case DISPLAY_MODE_TEST:
+			if (hasUpAction) {
+				startIterator++;
+			} else if (hasDownAction) {
+				startIterator--;
+			}
+
 			for (int i = 0; i < STRIP_PIXEL_LENGTH; i++) {
 				proxy.setPixelColor(i, 0, 0, 0);
 			}
+
+			endIterator = potValFloat * 300;
+
+			proxy.setPixelColor( startIterator, 255, 0, 0 );
+			proxy.setPixelColor( endIterator,   0,   0, 255 );
+
+			// Serial.print( startIterator );
+			// Serial.print( "->" );
+			// Serial.println( endIterator );
+
 			break;
 
 		case DISPLAY_MODE_PENDING:
@@ -546,8 +569,8 @@ void showWelcome() {
 	}
 
 	for(int i = 0; i < 50; i++) {
-		setAllLEDs(i,i / 2,i / 3);
-		delay(100);
+		setAllLEDs(i, i / 2,i / 3);
+		delay(10);
 	}
 
 	setAllLEDs(0,0,0);

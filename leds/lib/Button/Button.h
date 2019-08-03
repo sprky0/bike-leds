@@ -13,7 +13,9 @@ class Button {
 		Button(uint8_t digitalPin);       // constructor
 		void read(); // some member method
 		bool hasAction(); // is there an action queued up from the press happening ?
-		void receiveAction(); // say 'ok we got it -- action can be false'
+		uint8_t getPressCount();
+		unsigned long getLastPressDuration(); //
+		void resetAction(); // say 'ok we got it -- action can be false'
 
 	private:
 
@@ -21,7 +23,11 @@ class Button {
 		bool _hasPressAction = false; // data for "has the thing the button is supposed to do been done" ?
 		bool _state = false; // what we have now
 		bool _lastState = false; // what we had then
-		unsigned long lastDebounceMillis = 0; // how long do we need to be different to be noticed
+		unsigned long _lastDebounceMillis = 0; // how long do we need to be different to be noticed
+		unsigned long _lastPressDuration  = 0; // how long was the last button press?
+		unsigned long _lastPressStartMillis  = 0; // how long was the last button press?
+		uint8_t _pressCount = 0; // how many discrete presses were there?
+
 		// unsigned long debounceDelayMS = 50;
 		// ^ hardcoding this to save a couple bytes
 

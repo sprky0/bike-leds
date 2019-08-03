@@ -5,6 +5,7 @@
 #define BUTTON_CPP
 
 #define DEBOUNCE_DELAY_MS 50
+#define ACTION_COMPLETE_DELAY_MS 50
 
 /**
  * Button press including debounce
@@ -26,10 +27,10 @@ void Button::read() {
 // If the switch changed, due to noise or pressing:
 	if (reading != _lastState) {
 		// reset the debouncing timer
-		lastDebounceMillis = millis();
+		_lastDebounceMillis = millis();
 	}
 
-	if ((millis() - lastDebounceMillis) > DEBOUNCE_DELAY_MS) {
+	if ((millis() - _lastDebounceMillis) > DEBOUNCE_DELAY_MS) {
 
 		// whatever the reading is at, it's been there for longer than the debounce
 		// delay, so take it as the actual current state:
@@ -42,8 +43,14 @@ void Button::read() {
 			_state = reading;
 
 			// Doing this way b/c I don't want to deal with a callback at the moment
-			if (_state == true)
+			if (_state == true) {
 				_hasPressAction = true; 			// iHaveTheBall ->  noIHaveTheBall() <-- to reset ?  something like that
+				_lastPressStartMillis = millis();
+			} else if (_state == false) {
+				_lastPressDuration = millis() - _lastPressStartMillis;
+				_pressCount++;
+				// wait, we need a duration to this thing somehow
+			}
 
 		}
 
@@ -60,11 +67,21 @@ bool Button::hasAction() {
 	return _hasPressAction;
 }
 
+uint8_t Button::getPressCount() {
+	return _pressCount;
+}
+
+unsigned long getLastPressDuration() {
+	return _lastPressDuration;
+}
+
 /**
- * Call it!  "I've got this"
+ * We just did the appropriate action or queued action for this, so we reset for next time
  */
-void Button::receiveAction() {
+void Button::resetAction() {
 	_hasPressAction = false;
+	lastPressDuration = 0
+	pressCount = 0;
 }
 
 #endif

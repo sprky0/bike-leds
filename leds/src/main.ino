@@ -5,14 +5,17 @@
 #define POTENTIOMETER_PIN 0
 // ^ what is the value of A0 ? 0 ?  maybe ?
 
+#define POTENTIOMETER_SLEW_LIMIT 3
+
 // Pixel configuration relative to strip length
 #define PIXEL_PIN 6
 #define STRIP_PIXEL_LENGTH 300
 #define PRACTICAL_PIXEL_COUNT 300
-#define MAX_SNAKES 5
+#define MAX_SNAKES 50
 
 // Display modes - eg: all lights off, blinking, cycling, whatever
 
+// #define DISPLAY_MODE_SNAKES
 // Pending more - powered on but not doing anything
 #define DISPLAY_MODE_PENDING 0
 // Parked mode - minimal lighting, enough to be visible at night
@@ -21,6 +24,10 @@
 #define DISPLAY_MODE_FIND    2
 // Snakes!!!!
 #define DISPLAY_MODE_SNAKES  3
+#define DISPLAY_MODE_CANDY   4
+
+#define DISPLAY_MODE_TEST    99
+
 
 // Pixel drawing modes (add overlapping dudes or replace)
 #define PIXEL_ADDITIVE_MODE    0
@@ -34,7 +41,7 @@
 #include "Button.h"
 
 // Current display mode
-int displayMode = DISPLAY_MODE_PENDING;
+int displayMode = DISPLAY_MODE_TEST;
 
 // Current pixel drawing mode
 int printMode = PIXEL_ADDITIVE_MODE;
@@ -53,7 +60,9 @@ Button upButton     = Button(BUTTON_PIN_UP);
 Button downButton   = Button(BUTTON_PIN_DOWN);
 Button remoteButton = Button(BUTTON_PIN_REMOTE);
 
+// int lastPpotVal = 0;
 int potVal = 0;
+float potValFloat = 0.0;
 // int potentiometer = 0; // 0 - 1023
 
 int minR = 100;
@@ -78,9 +87,11 @@ void setup() {
 
 		snakes[i] = Snake(
 			random(0, PRACTICAL_PIXEL_COUNT),
-			random(0,50),
+			// random(0,50),
+			random(0,5),
 			-100 + random(0,200),
-			random(0,255), random(0,255), random(0,255)
+			// random(0,255), random(0,255), random(0,255)
+			random(0,50), random(0,255), random(0,50)
 		);
 
 		snakes[i].setActive();
@@ -93,10 +104,15 @@ void setup() {
 		strip.setPixelColor(i , 0, 0, 0);
 	}
 
+	strip.setBrightness(255);
+
 	strip.show();  // Initialize all pixels to 'off'
+	delay(1);
 
 	Serial.println("Setup all set!");
 
+
+	showWelcome();
 }
 
 
@@ -117,7 +133,7 @@ void loop() {
 	elapsedMS = millis() - previousMillis;
 	previousMillis = millis();
 
-	readInterface();
+	readInterface(elapsedMS);
 	// switch mode here -- eg: fade in / out or solid colors or whatever vs snakemode
 
 	bool hasUpAction = false;
@@ -156,6 +172,12 @@ void loop() {
 	// Update strip proxy from visualizer components (eg: parked thing, particle thing, etc)
 	switch (displayMode) {
 
+		case DISPLAY_MODE_TEST:
+			for (int i = 0; i < STRIP_PIXEL_LENGTH; i++) {
+				proxy.setPixelColor(i, 0, 0, 0);
+			}
+			break;
+
 		case DISPLAY_MODE_PENDING:
 		default:
 			// nothing doing here
@@ -172,6 +194,9 @@ void loop() {
 		case DISPLAY_MODE_SNAKES:
 			updateProxyFromSnakes(elapsedMS);
 			break;
+
+		case DISPLAY_MODE_CANDY:
+			updateProxyCandycane(elapsedMS);
 	}
 
 	// Update strip proxy from visualizations for user interaction (eg: light up some LEDS for button press or what-have-you)
@@ -202,6 +227,22 @@ void updateProxyParked(unsigned long elapsed) {
 	}
 
 	// update from ??
+
+}
+
+void updateProxyCandycane(unsigned long elapsed) {
+
+	int place = (int) (millis() / (1000 * potValFloat));
+
+	Serial.println(place);
+
+	for(int i = 0; i < PRACTICAL_PIXEL_COUNT; i++) {
+		int offset = i + place;
+		if (offset % 3 == 0)
+			proxy.setPixelColor(i, 255, 0, 255 * potValFloat);
+		else
+			proxy.setPixelColor(i, 255 * potValFloat, 0, 0);
+	}
 
 }
 
@@ -440,11 +481,79 @@ void freshSnakes() {
 
 }
 
-void readInterface() {
+void readInterface(unsigned long elapsedMS) {
 
 	upButton.read();
 	downButton.read();
 	remoteButton.read();
-	potVal = analogRead(POTENTIOMETER_PIN);
+
+	int _potVal = analogRead(A0);
+
+	if (abs(potVal - _potVal) > POTENTIOMETER_SLEW_LIMIT) {
+		if (potVal - _potVal > 0)
+			potVal -= POTENTIOMETER_SLEW_LIMIT;
+		else
+			potVal += POTENTIOMETER_SLEW_LIMIT;
+	}
+
+	if (potVal < 680)
+		potVal = 680;
+	else if (potVal > 1023)
+		potVal = 1023;
+
+	// potVal = (potVal + _potVal) / 2;
+
+	// Serial.println(potVal);
+	// 680 - 1023 RANGE FOR SOME REASON
+	potValFloat = (float) (potVal - 680) / 343;
+
+	if (potValFloat < 0) {
+		potValFloat = 0;
+	}
+
+	// Serial.println(potValFloat	);
+
+}
+
+void setAllLEDs(int r, int g, int b) {
+	for(int i = 0; i < STRIP_PIXEL_LENGTH; i++) {
+		strip.setPixelColor(i, r,g,b);
+	}
+	strip.show();
+}
+
+void showWelcome() {
+
+	for(int i = 0; i < STRIP_PIXEL_LENGTH - 7; i += 7) {
+		if (i > 6) {
+			strip.setPixelColor(i - 7, 0, 0, 0);
+			strip.setPixelColor(i - 6, 0, 0, 0);
+			strip.setPixelColor(i - 5, 0, 0, 0);
+			strip.setPixelColor(i - 4, 0, 0, 0);
+			strip.setPixelColor(i - 3, 0, 0, 0);
+			strip.setPixelColor(i - 2, 0, 0, 0);
+			strip.setPixelColor(i - 1, 0, 0, 0);
+		}
+		strip.setPixelColor(i,     255, 0,   0); // R
+		strip.setPixelColor(i + 1, 255, 127, 0); // O
+		strip.setPixelColor(i + 2, 255, 255, 0); // Y
+		strip.setPixelColor(i + 3, 0,   255, 0); // G
+		strip.setPixelColor(i + 4, 0,   0,   255); // B
+		strip.setPixelColor(i + 5, 75,  255, 130); // I
+		strip.setPixelColor(i + 6, 148, 255, 211); // V
+		strip.show();
+		delay(10);
+	}
+
+	for(int i = 0; i < 50; i++) {
+		setAllLEDs(i,i / 2,i / 3);
+		delay(100);
+	}
+
+	setAllLEDs(0,0,0);
+
+}
+
+void redScanner() {
 
 }

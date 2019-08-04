@@ -2,7 +2,7 @@
 #include "PixelProxy.h"
 
 #ifndef PRACTICAL_PIXEL_COUNT
-#define PRACTICAL_PIXEL_COUNT 300
+#define PRACTICAL_PIXEL_COUNT 260
 #endif
 
 #ifndef PIXELPROXY_CPP
@@ -10,21 +10,7 @@
 
 PixelProxy::PixelProxy() {}
 
-void PixelProxy::setBrightness(int b) {
-	if (b >= 0 && b < 255)
-		brightness = b;
-}
-
 void PixelProxy::setPixelColor(int pixel, int r, int g, int b) {
-
-	// Serial.print("p ");
-	// Serial.print(pixel);
-	// Serial.print(" to ");
-	// Serial.print(r);
-	// Serial.print(",");
-	// Serial.print(g);
-	// Serial.print(",");
-	// Serial.println(b);
 
 	if (pixel >= 0 && pixel < PRACTICAL_PIXEL_COUNT) {
 
@@ -32,11 +18,14 @@ void PixelProxy::setPixelColor(int pixel, int r, int g, int b) {
 		pixels[pixel][1] = g;
 		pixels[pixel][2] = b;
 
-	} else {
-		// Serial.print(pixel);
-		// Serial.println(" out of range .setPixelColor");
 	}
 
+}
+
+void PixelProxy::setAll(int r, int g, int b) {
+	for(int i = 0; i < PRACTICAL_PIXEL_COUNT; i++) {
+		setPixelColor(i,r,g,b);
+	}
 }
 
 void PixelProxy::setPixelColorAdditive(int pixel, int r, int g, int b) {
@@ -56,10 +45,8 @@ void PixelProxy::setPixelColorAdditive(int pixel, int r, int g, int b) {
 		if (pixels[pixel][2] > 255)
 			pixels[pixel][2] = 255;
 
-	} else {
-		// Serial.print(pixel);
-		// Serial.println(" out of range .setPixelColorAdditive");
 	}
+
 }
 
 int PixelProxy::getRAt(int pixel) {

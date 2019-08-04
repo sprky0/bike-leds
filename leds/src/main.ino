@@ -1,37 +1,4 @@
-// Interface pins
-#define BUTTON_PIN_UP     9
-#define BUTTON_PIN_DOWN   10
-#define BUTTON_PIN_REMOTE 8
-#define POTENTIOMETER_PIN 0
-// ^ what is the value of A0 ? 0 ?  maybe ?
-
-#define POTENTIOMETER_SLEW_LIMIT 3
-
-// Pixel configuration relative to strip length
-#define PIXEL_PIN 6
-#define STRIP_PIXEL_LENGTH 300
-#define PRACTICAL_PIXEL_COUNT 300
-#define MAX_SNAKES 50
-
-// Display modes - eg: all lights off, blinking, cycling, whatever
-
-// #define DISPLAY_MODE_SNAKES
-// Pending more - powered on but not doing anything
-#define DISPLAY_MODE_PENDING 0
-// Parked mode - minimal lighting, enough to be visible at night
-#define DISPLAY_MODE_PARKED  1
-// Find: Remote control make the bike flash a lot
-#define DISPLAY_MODE_FIND    2
-// Snakes!!!!
-#define DISPLAY_MODE_SNAKES  3
-#define DISPLAY_MODE_CANDY   4
-
-#define DISPLAY_MODE_TEST    99
-
-
-// Pixel drawing modes (add overlapping dudes or replace)
-#define PIXEL_ADDITIVE_MODE    0
-#define PIXEL_REPLACEMENT_MODE 1
+#include "Config.h"
 
 // Include libraries
 #include <Arduino.h>
@@ -41,7 +8,7 @@
 #include "Button.h"
 
 // Current display mode
-int displayMode = DISPLAY_MODE_TEST;
+int displayMode = DISPLAY_MODE_PENDING;
 
 // Current pixel drawing mode
 int printMode = PIXEL_ADDITIVE_MODE;
@@ -50,6 +17,12 @@ int printMode = PIXEL_ADDITIVE_MODE;
 unsigned long previousMillis = 0;
 unsigned long cycleMS = 0;
 unsigned long elapsedMS = 0;
+unsigned long lastModeChangeMS = 0;
+
+int frameCount = 0;
+unsigned long cycleDuration = 1;
+int cycleCount = 0;
+
 
 // Particles, and display
 Snake snakes[MAX_SNAKES];
@@ -63,7 +36,6 @@ Button remoteButton = Button(BUTTON_PIN_REMOTE);
 // int lastPpotVal = 0;
 int potVal = 0;
 float potValFloat = 0.0;
-// int potentiometer = 0; // 0 - 1023
 
 int minR = 100;
 int maxR = 255;
@@ -71,8 +43,6 @@ int minG = 0;
 int maxG = 0;
 int minB = 0;
 int maxB = 255;
-
-int frameCount = 0;
 
 void setup() {
 
@@ -82,20 +52,8 @@ void setup() {
 	// Reserve memory for snakes
 	populateSnakes();
 
-	//
-	for(int i = 0; i < MAX_SNAKES; i++) {
-
-		snakes[i] = Snake(
-			random(0, PRACTICAL_PIXEL_COUNT),
-			// random(0,50),
-			random(0,5),
-			-100 + random(0,200),
-			// random(0,255), random(0,255), random(0,255)
-			random(0,50), random(0,255), random(0,50)
-		);
-
-		snakes[i].setActive();
-	}
+	// The classic
+	getWoodlandSnakes();
 
 	strip.begin(); // Initialize NeoPixel strip object (REQUIRED)
 
@@ -104,15 +62,18 @@ void setup() {
 		strip.setPixelColor(i , 0, 0, 0);
 	}
 
-	strip.setBrightness(255);
+	// strip.setBrightness(255);
+	// strip.setBrightness(100);
 
 	strip.show();  // Initialize all pixels to 'off'
 	delay(1);
 
 	Serial.println("Setup all set!");
 
-
 	showWelcome();
+
+	// changeMode( DISPLAY_MODE_PENDING, true );
+	changeMode( DISPLAY_MODE_FIRE, true );
 }
 
 
@@ -120,22 +81,23 @@ void setup() {
 
 
 int startIterator = 0;
-int endIterator   = 0; // persist outside of loop some shit
+int endIterator   = 10; // persist outside of loop some shit
 
+// top  R 0-31
+// top  L 96-127
+// down R 32-63
+// down L 64-95
+// seat L 128-153
+// seat R 154-179
+// rear L 200-219
+// rear R 180-199  // top to bottom
+// front L 240-259 // bottom to top
+// front R 220-239 //
 
 void loop() {
 
-	// int potval = analogRead(POTENTIOMETER_PIN);
-	// Serial.println(potval);
-	// 681 - 1023 // this range do something with it
-
-	/*
-	Serial.print( digitalRead(BUTTON_PIN_DOWN) );
-	Serial.print(",");
-	Serial.print( digitalRead(BUTTON_PIN_UP) );
-	Serial.print(",");
-	Serial.println( digitalRead(BUTTON_PIN_REMOTE) );
-	*/
+	// set all default to black
+	proxy.setAll(0,0,0);
 
 	elapsedMS = millis() - previousMillis;
 	previousMillis = millis();
@@ -150,28 +112,27 @@ void loop() {
 	if (upButton.hasAction()) {
 		hasUpAction = true;
 		Serial.println("UP");
-		// displayMode = DISPLAY_MODE_SNAKES;
-		// handle up press here
+		if (upButton.getLastPressDuration() > 1000)
+			changeMode(DISPLAY_MODE_PENDING, true);
+		else
+			changeMode(displayMode + 1);
 		upButton.resetAction();
 	}
 
 	if (downButton.hasAction()) {
 		hasDownAction = true;
-		// handle up press here
 		Serial.println("DOWN");
-		// displayMode = DISPLAY_MODE_PARKED;
+		if (downButton.getLastPressDuration() > 1000)
+			changeMode(DISPLAY_MODE_PARKED, true);
+		else
+			changeMode(displayMode - 1);
 		downButton.resetAction();
 	}
 
 	if (remoteButton.hasAction()) {
 		hasRemoteAction = true;
 		elapsedMS = 0;
-		if (displayMode == DISPLAY_MODE_SNAKES)
-			displayMode = DISPLAY_MODE_PARKED; //
-		else
-			displayMode = DISPLAY_MODE_SNAKES;
-		// handle remote pressed here
-		Serial.println("REMOTE");
+		changeMode(DISPLAY_MODE_FIND, true);
 		remoteButton.resetAction();
 	}
 
@@ -179,31 +140,25 @@ void loop() {
 	// Update strip proxy from visualizer components (eg: parked thing, particle thing, etc)
 	switch (displayMode) {
 
-		case DISPLAY_MODE_TEST:
-			if (hasUpAction) {
-				startIterator++;
-			} else if (hasDownAction) {
-				startIterator--;
-			}
-
-			for (int i = 0; i < STRIP_PIXEL_LENGTH; i++) {
-				proxy.setPixelColor(i, 0, 0, 0);
-			}
-
-			endIterator = potValFloat * 300;
-
-			proxy.setPixelColor( startIterator, 255, 0, 0 );
-			proxy.setPixelColor( endIterator,   0,   0, 255 );
-
-			// Serial.print( startIterator );
-			// Serial.print( "->" );
-			// Serial.println( endIterator );
-
-			break;
-
 		case DISPLAY_MODE_PENDING:
 		default:
 			// nothing doing here
+			// Serial.println("DOING NOTHING, INTENTIONALLY!");
+			break;
+
+		case DISPLAY_MODE_LINES:
+			updateProxyLines(elapsedMS);
+			break;
+
+		case DISPLAY_MODE_FIRE:
+			updateProxyFire(elapsedMS);
+			if (potValFloat > 0.5 && random(0,100) > 90) {
+				addSnakeSparkles();
+			}
+			updateProxyFromSnakes(elapsedMS, true);
+			break;
+
+		case DISPLAY_MODE_TEST:
 			break;
 
 		case DISPLAY_MODE_FIND:
@@ -216,10 +171,20 @@ void loop() {
 
 		case DISPLAY_MODE_SNAKES:
 			updateProxyFromSnakes(elapsedMS);
+			if (potValFloat > 0.5 && random(0,100) > 90) {
+				addARandomSnake();
+			}
 			break;
 
-		case DISPLAY_MODE_CANDY:
-			updateProxyCandycane(elapsedMS);
+		case DISPLAY_MODE_SNAKEFRICTION:
+			updateProxyFromSnakes(elapsedMS);
+			addRandomFrictionSnakes(); // snakeFriction
+			break;
+
+		case DISPLAY_MODE_FADER:
+			updateProxyFader(elapsedMS);
+			break;
+
 	}
 
 	// Update strip proxy from visualizations for user interaction (eg: light up some LEDS for button press or what-have-you)
@@ -230,46 +195,199 @@ void loop() {
 
 	cycleMS += elapsedMS;
 
-	if (cycleMS >= 1000) {
-		Serial.println(frameCount);
-		frameCount = 0;
+	if (cycleMS >= cycleDuration) {
 		cycleMS = 0;
+		cycleCount++;
 	}
+
+}
+
+void setCycleDuration(unsigned long ms) {
+	cycleCount = 0;
+	cycleMS = 0;
+	cycleDuration = ms;
+}
+
+void changeMode(int targetMode) {
+	changeMode( targetMode, false );
+}
+
+void changeMode(int targetMode, bool force) {
+
+	if (!force && targetMode < DISPLAY_MODE_MINIMUM) {
+		Serial.print("MODE OUT OF RANGE - GOING TO LAST");
+		Serial.print( targetMode );
+		targetMode = DISPLAY_MODE_MAXIMUM;
+	} else if (!force && targetMode > DISPLAY_MODE_MAXIMUM) {
+		Serial.print("MODE OUT OF RANGE - GOING TO FIRST");
+		Serial.print( targetMode );
+		targetMode = DISPLAY_MODE_MINIMUM;
+	}
+
+	cycleMS = 0;
+
+	switch (targetMode) {
+
+		default:
+		case DISPLAY_MODE_PENDING:
+		strip.setBrightness(0);
+		break;
+
+		case DISPLAY_MODE_PARKED:
+		strip.setBrightness(100);
+		populateSnakes(); // clear snakes
+		snakes[0] = Snake(
+			0,
+			50,
+			300,
+			128, 0, 0
+		);
+		snakes[0].setMode(1);
+		snakes[0].setActive();
+		snakes[1] = Snake(
+			STRIP_PIXEL_LENGTH / 2,
+			50,
+			300,
+			128, 0, 0
+		);
+		snakes[1].setMode(1);
+		snakes[1].setActive();
+		break;
+
+		case DISPLAY_MODE_FIND:
+		strip.setBrightness(255);
+		populateSnakes();
+		for(int i = 0; i < 5; i++) {
+			snakes[i] = Snake(
+				i * 10,
+				5,
+				100,
+				128, 0, 0
+			);
+			snakes[i].setActive();
+		}
+		for(int i = 5; i < 10; i++) {
+			snakes[i] = Snake(
+				i * 10,
+				5,
+				1000,
+				255, 255, 255
+			);
+			snakes[i].setActive();
+		}
+		break;
+
+		case DISPLAY_MODE_SNAKES:
+		strip.setBrightness(200);
+		getWoodlandSnakes();
+		break;
+
+		case DISPLAY_MODE_SNAKEFRICTION:
+		strip.setBrightness(200);
+		populateSnakes();
+		break;
+
+		case DISPLAY_MODE_FADER:
+		strip.setBrightness(100);
+		break;
+
+		case DISPLAY_MODE_FIRE:
+		strip.setBrightness(100);
+		populateSnakes(); // clear me
+		break;
+
+		case DISPLAY_MODE_LINES:
+		strip.setBrightness(200);
+		break;
+
+
+	}
+
+
+	displayMode = targetMode;
+	lastModeChangeMS = millis();
+
+	Serial.print("We changed mode to ");
+	Serial.println( displayMode );
 
 }
 
 void updateProxyFind(unsigned long elapsed) {
 	// do some noisy things to show where bike is
+	updateProxyFromSnakes(elapsed, true);
+
+	if (millis() - lastModeChangeMS > DISPLAY_FIND_TIMEOUT) {
+		changeMode(DISPLAY_MODE_PARKED, true);
+	}
+
 }
 
 void updateProxyParked(unsigned long elapsed) {
+	updateProxyFromSnakes(elapsed, true);
+}
 
-	// set all default to black
-	for(int i = 0; i < PRACTICAL_PIXEL_COUNT; i++) {
-		proxy.setPixelColor(i,0,0,0);
+void updateProxyFader(unsigned long elapsed) {
+
+	// fade up
+	float fade = (float) (cycleCount % 40) / 40;
+
+	// scale to 0-2
+	fade = (fade * 2);
+	// second half scale fade down
+	if (fade > 1) {
+		fade = 2 - fade;
 	}
 
-	// update from ??
+	proxy.setAll(fade * 150, fade * 60, fade * 60);
 
 }
 
-void updateProxyCandycane(unsigned long elapsed) {
+void updateProxyLines(unsigned long elapsed) {
 
-	int place = (int) (millis() / (1000 * potValFloat));
+		proxy.setAll(50,50,0);
 
-	Serial.println(place);
+		int offset = cycleCount % STRIP_PIXEL_LENGTH;
 
-	for(int i = 0; i < PRACTICAL_PIXEL_COUNT; i++) {
-		int offset = i + place;
-		if (offset % 3 == 0)
-			proxy.setPixelColor(i, 255, 0, 255 * potValFloat);
-		else
-			proxy.setPixelColor(i, 255 * potValFloat, 0, 0);
-	}
+		for (int i = offset; i < offset + 80; i++) {
+			proxy.setPixelColor(i % STRIP_PIXEL_LENGTH, 50, 0, 0);
+		}
+
+		offset = (cycleCount % STRIP_PIXEL_LENGTH) + 80;
+
+		for (int i = offset; i < offset + 160; i++) {
+			proxy.setPixelColor(i % STRIP_PIXEL_LENGTH, 0, 0, 50);
+		}
 
 }
 
 void updateProxyFromIndicator(unsigned long elapsed) {
+
+	if (upButton.getState()) {
+		for(int i = 21; i <= 31; i++) {
+			proxy.setPixelColor(i,255,127,0);
+		}
+		for(int i = 94; i <= 106; i++) {
+			proxy.setPixelColor(i,255,127,0);
+		}
+	}
+
+	if (downButton.getState()) {
+		for(int i = 21; i <= 31; i++) {
+			proxy.setPixelColor(i,255,0,0);
+		}
+		for(int i = 94; i <= 106; i++) {
+			proxy.setPixelColor(i,255,0,0);
+		}
+	}
+
+	if (remoteButton.getState()) {
+		for(int i = 21; i <= 31; i++) {
+			proxy.setPixelColor(i,0,0,255);
+		}
+		for(int i = 94; i <= 106; i++) {
+			proxy.setPixelColor(i,0,0,255);
+		}
+	}
 
 }
 
@@ -277,11 +395,11 @@ void updateProxyBackground(unsigned long elapsed) {
 
 }
 
-void updateProxyFromSnakes(unsigned long elapsed) {
+void updateProxyFromSnakes(unsigned long elapsed, bool noclear) {
 
-	// set all default to black
-	for(int i = 0; i < PRACTICAL_PIXEL_COUNT; i++) {
-		proxy.setPixelColor(i,0,0,0);
+	if (noclear == false) {
+		// set all default to black
+		proxy.setAll(0,0,0);
 	}
 
 	// set all to pixel color from
@@ -310,6 +428,12 @@ void updateProxyFromSnakes(unsigned long elapsed) {
 		snakes[i].update(elapsed, PRACTICAL_PIXEL_COUNT);
 
 	}
+
+}
+
+void updateProxyFromSnakes(unsigned long elapsed) {
+
+	updateProxyFromSnakes(elapsed, false);
 
 }
 
@@ -498,7 +622,7 @@ void freshSnakes() {
 			(int) random(minR,maxR), (int) random(minG,maxG), (int) random(minB,maxB)
 		);
 
-		if (random(0,1) > .9)
+		if (random(0,10) > 7)
 			snakes[i].setActive();
 	}
 
@@ -526,7 +650,6 @@ void readInterface(unsigned long elapsedMS) {
 
 	// potVal = (potVal + _potVal) / 2;
 
-	// Serial.println(potVal);
 	// 680 - 1023 RANGE FOR SOME REASON
 	potValFloat = (float) (potVal - 680) / 343;
 
@@ -570,13 +693,132 @@ void showWelcome() {
 
 	for(int i = 0; i < 50; i++) {
 		setAllLEDs(i, i / 2,i / 3);
-		delay(10);
+		delay(1);
+	}
+	for(int i = 50; i > 0; i--) {
+		setAllLEDs(i, i / 2,i / 3);
+		delay(1);
 	}
 
 	setAllLEDs(0,0,0);
 
 }
 
-void redScanner() {
+// void updateProxyCycler()
 
+void updateProxyFire(unsigned long elapsedMS) {
+
+	// Serial.println(cycleCount);
+
+	// int cur = 0;
+	int s = 0;
+	int e = 0;
+
+	proxy.setAll(random(25,potValFloat * 50),random(0,potValFloat * 25),0);
+
+	switch (cycleCount % 10) {
+
+		// top  R 0-31
+		case 0: s = 0; e = 31; break;
+		// top  L 96-127
+		case 1: s = 96; e = 127; break;
+		// down R 32-63
+		case 2: s = 32; e = 63; break;
+		// down L 64-95
+		case 3: s = 64; e = 95; break;
+		// seat L 128-153
+		case 4: s = 128; e = 153; break;
+		// seat R 154-179
+		case 5: s = 154; e = 179; break;
+		// rear L 200-219
+		case 6: s = 200; e = 219; break;
+		// rear R 180-199  // top to bottom
+		case 7: s = 180; e = 199; break;
+		// front L 240-259 // bottom to top
+		case 8: s = 240; e = 259; break;
+		// front R 220-239 //
+		case 9: s = 220; e = 239; break;
+
+	}
+
+	// burst level = knob
+	for(int i = s; i <= e; i++) {
+		proxy.setPixelColor( i, potValFloat * 200 + 55, potValFloat * 225 + 24, 0 );
+	}
+
+}
+
+void getWoodlandSnakes() {
+
+	for(int i = 0; i < MAX_SNAKES; i++) {
+
+		snakes[i] = Snake(
+			random(0, PRACTICAL_PIXEL_COUNT),
+			// random(0,50),
+			random(0,5),
+			-100 + random(0,200),
+			// random(0,255), random(0,255), random(0,255)
+			random(0,50), random(0,255), random(0,50)
+		);
+
+		snakes[i].setActive();
+
+	}
+
+}
+
+void addSnakeSparkles() {
+	// bright white and not many of them
+
+	for(int i = 0; i < random(4,8); i++) {
+		int snakeIndex = getFreeSnakeIndex();
+		snakes[snakeIndex] = Snake(
+			random(0, STRIP_PIXEL_LENGTH),
+			1,
+			-100 + random(0,200),
+			255,255,255
+		);
+		snakes[snakeIndex].setLifetime(500);
+		snakes[snakeIndex].setActive();
+	}
+
+}
+
+void addRandomFrictionSnakes() {
+
+	if (random(1,100) > 95) {
+
+		int snakeIndex = getFreeSnakeIndex();
+
+		snakes[snakeIndex] = Snake(
+			random(0, PRACTICAL_PIXEL_COUNT),
+			// random(0,50),
+			random(5,20),
+			-200 + random(0,400),
+			// random(0,255), random(0,255), random(0,255)
+			random(0,255), random(0,155), random(0,50)
+		);
+
+		snakes[snakeIndex].setFriction(.6);
+		// snakes[snakeIndex].setLoopDeath(true); // loop death is really weird with tails lets do fade instead
+		snakes[snakeIndex].setLifetime(5000);
+		snakes[snakeIndex].setActive();
+
+	}
+
+
+}
+
+uint8_t getRed(uint32_t color) {
+	return (color >> 16) & 0xFF;
+}
+
+// Returns the Green component of a 32-bit color
+uint8_t getGreen(uint32_t color) {
+	return (color >> 8) & 0xFF;
+}
+
+// Returns the Blue component of a 32-bit color
+uint8_t getBlue(uint32_t color) {
+	return color & 0xFF;
 }

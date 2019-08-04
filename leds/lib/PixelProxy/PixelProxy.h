@@ -1,7 +1,7 @@
 #include <Arduino.h>
 
 #ifndef PRACTICAL_PIXEL_COUNT
-#define PRACTICAL_PIXEL_COUNT 300
+#define PRACTICAL_PIXEL_COUNT 260
 #endif
 
 #ifndef PIXELPROXY_H
@@ -15,14 +15,13 @@ class PixelProxy {
 
 	public:
 
-		int brightness = 255;
 		int pixels[PRACTICAL_PIXEL_COUNT][3];
 		int pixelCount = PRACTICAL_PIXEL_COUNT;
 
 		// there's also pin and some other crap in the constructor for NeoPixel library
 		PixelProxy();
 
-		void setBrightness(int b);
+		void setAll(int r, int g, int b);
 		void setPixelColor(int pixel, int r, int g, int b);
 		void setPixelColorAdditive(int pixel, int r, int g, int b);
 

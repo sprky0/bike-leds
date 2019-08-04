@@ -4,8 +4,8 @@
 #ifndef BUTTON_CPP
 #define BUTTON_CPP
 
-#define DEBOUNCE_DELAY_MS 50
-#define ACTION_COMPLETE_DELAY_MS 100
+#define DEBOUNCE_DELAY_MS 40
+#define ACTION_COMPLETE_DELAY_MS 50
 
 /**
  * Button press including debounce
@@ -22,7 +22,6 @@ void Button::read() {
 	// Read the state of the switch into a local variable:
 	bool reading = digitalRead(_pin);
 
-	// Serial.println( reading );
 
 // If the switch changed, due to noise or pressing:
 	if (reading != _lastState) {
@@ -45,11 +44,24 @@ void Button::read() {
 			// Doing this way b/c I don't want to deal with a callback at the moment
 			if (_state == true) {
 				// _hasPressAction = true; 			// iHaveTheBall ->  noIHaveTheBall() <-- to reset ?  something like that
-				_lastPressStartMillis = millis();
+				_lastPressStartMillis = _lastDebounceMillis;
+
+				// Serial.println( _lastPressStartMillis );
+				// Serial.println( millis() );
+				//
+				// Serial.println("VVVVV--------");
+
 			} else if (_state == false) {
 				_lastPressDuration = millis() - _lastPressStartMillis;
 				_pressCount++;
-				// wait, we need a duration to this thing somehow
+
+				// Serial.println( _lastPressStartMillis );
+				// Serial.println( _lastPressDuration );
+				// Serial.println( millis() );
+				// // wait, we need a duration to this thing somehow
+				//
+				//
+				// Serial.println("^^^^^--------");
 			}
 
 		}
@@ -60,15 +72,22 @@ void Button::read() {
 		// this means we are done with clicky time -- the person has let go and stopped pressing the button for long enough
 		// to consider that a completed button pressing session
 		_hasPressAction = true;
-		Serial.print("PRESS BUTTON TIME IS DONE ");
-		Serial.print(_pressCount);
-		Serial.print(" presses, last one was ");
-		Serial.print(_lastPressDuration);
-		Serial.println("MS");
+		// Serial.print("PRESS BUTTON TIME IS DONE ");
+		// Serial.print(_pressCount);
+		// Serial.print(" presses, last one was ");
+		// Serial.print(_lastPressDuration);
+		// Serial.println("MS");
 	}
 
 	_lastState = reading;
 
+}
+
+/**
+ * Is there button work to do?
+ */
+bool Button::getState() {
+	return _lastState;
 }
 
 /**

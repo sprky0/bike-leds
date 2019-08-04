@@ -13,6 +13,7 @@ class Button {
 		Button(uint8_t digitalPin);       // constructor
 		void read(); // some member method
 		bool hasAction(); // is there an action queued up from the press happening ?
+		bool getState(); // get the current pressed state
 		uint8_t getPressCount();
 		unsigned long getLastPressDuration(); //
 		void resetAction(); // say 'ok we got it -- action can be false'

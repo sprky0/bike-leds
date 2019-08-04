@@ -37,6 +37,11 @@ Button remoteButton = Button(BUTTON_PIN_REMOTE);
 int potVal = 0;
 float potValFloat = 0.0;
 
+
+int fR = 160;
+int fG = 60;
+int fB = 60;
+
 int minR = 100;
 int maxR = 255;
 int minG = 0;
@@ -73,7 +78,7 @@ void setup() {
 	showWelcome();
 
 	// changeMode( DISPLAY_MODE_PENDING, true );
-	changeMode( DISPLAY_MODE_FIRE, true );
+	changeMode( DISPLAY_MODE_FADER, true );
 }
 
 
@@ -183,6 +188,15 @@ void loop() {
 
 		case DISPLAY_MODE_FADER:
 			updateProxyFader(elapsedMS);
+			updateProxyFromSnakes(elapsedMS, true);
+			if (potValFloat > 0.5 && random(0,100) > 90) {
+				addARandomSnake();
+			}
+			if (potValFloat > 0.8 && random(0,100) > 90) {
+				int snakeIndex = getActiveSnakeIndex();
+				if (snakeIndex > 0)
+					explodeSnake(snakeIndex);
+			}
 			break;
 
 	}
@@ -288,6 +302,10 @@ void changeMode(int targetMode, bool force) {
 		break;
 
 		case DISPLAY_MODE_FADER:
+		fR = random(10,160);
+		fG = random(10,160);
+		fB = random(10,160);
+		populateSnakes();
 		strip.setBrightness(100);
 		break;
 
@@ -338,7 +356,7 @@ void updateProxyFader(unsigned long elapsed) {
 		fade = 2 - fade;
 	}
 
-	proxy.setAll(fade * 150, fade * 60, fade * 60);
+	proxy.setAll(fade * fR, fade * fG, fade * fB);
 
 }
 
@@ -366,7 +384,7 @@ void updateProxyFromIndicator(unsigned long elapsed) {
 		for(int i = 21; i <= 31; i++) {
 			proxy.setPixelColor(i,255,127,0);
 		}
-		for(int i = 94; i <= 106; i++) {
+		for(int i = 96; i <= 106; i++) {
 			proxy.setPixelColor(i,255,127,0);
 		}
 	}
@@ -375,7 +393,7 @@ void updateProxyFromIndicator(unsigned long elapsed) {
 		for(int i = 21; i <= 31; i++) {
 			proxy.setPixelColor(i,255,0,0);
 		}
-		for(int i = 94; i <= 106; i++) {
+		for(int i = 96; i <= 106; i++) {
 			proxy.setPixelColor(i,255,0,0);
 		}
 	}
@@ -384,7 +402,7 @@ void updateProxyFromIndicator(unsigned long elapsed) {
 		for(int i = 21; i <= 31; i++) {
 			proxy.setPixelColor(i,0,0,255);
 		}
-		for(int i = 94; i <= 106; i++) {
+		for(int i = 96; i <= 106; i++) {
 			proxy.setPixelColor(i,0,0,255);
 		}
 	}
@@ -670,26 +688,43 @@ void setAllLEDs(int r, int g, int b) {
 
 void showWelcome() {
 
-	for(int i = 0; i < STRIP_PIXEL_LENGTH - 7; i += 7) {
-		if (i > 6) {
-			strip.setPixelColor(i - 7, 0, 0, 0);
-			strip.setPixelColor(i - 6, 0, 0, 0);
-			strip.setPixelColor(i - 5, 0, 0, 0);
-			strip.setPixelColor(i - 4, 0, 0, 0);
-			strip.setPixelColor(i - 3, 0, 0, 0);
-			strip.setPixelColor(i - 2, 0, 0, 0);
-			strip.setPixelColor(i - 1, 0, 0, 0);
-		}
-		strip.setPixelColor(i,     255, 0,   0); // R
-		strip.setPixelColor(i + 1, 255, 127, 0); // O
-		strip.setPixelColor(i + 2, 255, 255, 0); // Y
-		strip.setPixelColor(i + 3, 0,   255, 0); // G
-		strip.setPixelColor(i + 4, 0,   0,   255); // B
-		strip.setPixelColor(i + 5, 75,  255, 130); // I
-		strip.setPixelColor(i + 6, 148, 255, 211); // V
-		strip.show();
-		delay(10);
-	}
+	// for(int i = 0; i < STRIP_PIXEL_LENGTH - 7; i += 7) {
+	// 	if (i > 6) {
+	// 		strip.setPixelColor(i - 7, 0, 0, 0);
+	// 		strip.setPixelColor(i - 6, 0, 0, 0);
+	// 		strip.setPixelColor(i - 5, 0, 0, 0);
+	// 		strip.setPixelColor(i - 4, 0, 0, 0);
+	// 		strip.setPixelColor(i - 3, 0, 0, 0);
+	// 		strip.setPixelColor(i - 2, 0, 0, 0);
+	// 		strip.setPixelColor(i - 1, 0, 0, 0);
+	// 	}
+	int i = 0;
+		// delay(10);
+	// }
+
+	// int i = 0;
+	strip.setPixelColor(i,     255, 0,   0); // R
+	strip.setPixelColor(i + 1, 255, 127, 0); // O
+	strip.setPixelColor(i + 2, 255, 255, 0); // Y
+	strip.setPixelColor(i + 3, 0,   255, 0); // G
+	strip.setPixelColor(i + 4, 0,   0,   255); // B
+	strip.setPixelColor(i + 5, 75,  255, 130); // I
+	strip.setPixelColor(i + 6, 148, 255, 211); // V
+
+	i = 97;
+	strip.setPixelColor(i,     255, 0,   0); // R
+	strip.setPixelColor(i + 1, 255, 127, 0); // O
+	strip.setPixelColor(i + 2, 255, 255, 0); // Y
+	strip.setPixelColor(i + 3, 0,   255, 0); // G
+	strip.setPixelColor(i + 4, 0,   0,   255); // B
+	strip.setPixelColor(i + 5, 75,  255, 130); // I
+	strip.setPixelColor(i + 6, 148, 255, 211); // V
+
+
+	strip.show();
+
+
+	delay(500);
 
 	for(int i = 0; i < 50; i++) {
 		setAllLEDs(i, i / 2,i / 3);

@@ -30,7 +30,6 @@ class Snake {
 		// what kind of thing is this fucker?  (eg: blinky boy, fader slowly, wwhatever)
 		// maybe also include some notion of trailing off at the edges
 
-
 		int snakeDisplayMode = INOUT_FADE_COLOR_MODE; // fades away from the direction of velcity
 
 		Snake();

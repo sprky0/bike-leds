@@ -12,6 +12,8 @@
 // Color fades up away from velocity
 // #define OUTIN_FADE_COLOR_MODE     3
 
+// #define PRACTICAL_PIXEL_COUNT 260
+
 class Snake {
 
 	public:
@@ -35,10 +37,12 @@ class Snake {
 		Snake();
 		Snake(int startPixel, int lengthInPixels, float velocityPixelsPerSecond, int r, int g, int b);
 
+		void setMode(int mode);
 		void setPixel(int pixel);
 		void setVelocity(float velocityPixelsPerSecond);
 		void setFriction(float frictionPerSecond);
 		void setLifetime(unsigned long lifetime);
+		void setLoopDeath(bool loopdeath);
 		void setActive();
 		void setInactive();
 		void setProtected();
@@ -54,7 +58,9 @@ class Snake {
 		boolean isProtected();
 		boolean isActive();
 
-	// private:
+	private:
+
+		bool _loopDeath = false;
 
 };
 

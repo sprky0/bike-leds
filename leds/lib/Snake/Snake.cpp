@@ -1,3 +1,5 @@
+#include "Config.h"
+
 #include <Arduino.h>
 #include "Snake.h"
 
@@ -34,6 +36,10 @@ Snake::Snake(int startPixel, int lengthInPixels, float velocityPixelsPerSecond, 
 
 }
 
+void Snake::setMode(int mode) {
+	snakeDisplayMode = mode;
+}
+
 void Snake::setPixel(int pixel) {
 	p = pixel;
 }
@@ -44,6 +50,10 @@ void Snake::setVelocity(float velocityPixelsPerSecond) {
 
 void Snake::setFriction(float frictionPerSecond) {
 	f = frictionPerSecond;
+}
+
+void Snake::setLoopDeath(bool loopdeath) {
+	_loopDeath = loopdeath;
 }
 
 void Snake::setLifetime(unsigned long lifetime) {
@@ -72,32 +82,29 @@ void Snake::update(unsigned long elapsed, int pixelCount) {
 	float elapsedFloatMS = (float) elapsed;
 	float pixelCountF    = (float) pixelCount;
 
-	// Serial.println( elapsedFloatMS );
-
-	// p = 0;
-	// v = 0;
-
 	p = (p + ((elapsedFloatMS / 1000) * v));
+
+	if (f > 0) {
+		v *= 1 - ((float) (elapsed / 1000) * f);
+	}
 	// v *= 1 - ((float) (elapsed / 1000) * f);
 
-	if (p < 0) {
-		p = pixelCountF - 1;
-	} else if (p > pixelCountF) {
+	if (_loopDeath && (p < 0 || p > pixelCountF)) {
 		p = 0;
+		setInactive();
 	}
+
+	while (p < 0)
+		p += pixelCountF;
+
+	while (p > pixelCountF)
+		p -= pixelCountF;
 
 	if (lifetimeMS > 0 && millis() - bornMillis > lifetimeMS) {
 		Serial.println("SNAKE DIED");
 		setInactive();
 		setPixel(0);
 	}
-
-	// Serial.print(elapsedFloatMS);
-	// Serial.print(" ");
-	// Serial.print(v);
-	// Serial.print(" ");
-	// Serial.println(p);
-
 }
 
 float Snake::getVelocity() {
@@ -113,17 +120,18 @@ int Snake::getPixel() {
 }
 
 int Snake::chanelValueAt(int pos, int channelValue) {
+	int cva = 0;
 	switch(snakeDisplayMode) {
 		default:
 		case 0:
-			return channelValue;
+			cva = channelValue;
 		case 1:
 			float scaleValue = ((float) snakeLength - (float) pos) / (float) snakeLength;
 			if (v > 0) {
 				scaleValue = 1 - scaleValue;
 			}
 			float channelScaledValue = scaleValue * (float) channelValue;
-			return (int) channelScaledValue;
+			cva = (int) channelScaledValue;
 		// case 2:
 		// 	float scaleValue = ((float) snakeLength - (float) pos) / (float) snakeLength;
 		// 	if (v > 0) {
@@ -135,6 +143,18 @@ int Snake::chanelValueAt(int pos, int channelValue) {
 		// 	float channelScaledValue = scaleValue * (float) channelValue;
 		// 	return (int) channelScaledValue;
 	}
+
+	if (lifetimeMS > 0 && lifetimeMS - (millis() - bornMillis) < 500) {
+		float lms = (float) lifetimeMS;
+		float lifeToGo = (float) (lifetimeMS + bornMillis - millis()) / 500;
+		// Serial.print(lifeToGo);
+		// Serial.print(" @ ");
+		// Serial.println(cva);
+		cva = (float) cva * lifeToGo;
+	}
+
+	return (int) cva;
+
 }
 
 // pos = 0 to (length-1)

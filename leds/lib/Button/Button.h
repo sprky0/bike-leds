@@ -32,6 +32,29 @@ class Button {
 		// unsigned long debounceDelayMS = 50;
 		// ^ hardcoding this to save a couple bytes
 
+		// @todo track the keypress duration
+		// receive the # of presses
+
 };
 
 #endif
+
+
+// @toto interface cerroncept implementation
+/**
+
+- Button has debounce -- how long must it remain changed to count as a real change ?
+- Add:
+	- Opposite -- of that, after debounce to "off" state -- how long for it to count as "action completed" ?
+	- This will allow doubleclick, multiple clicks etc (but not for alternating or combinaton of buttons -- but maybe that's ok)
+	- Also store how long the last state was held -- so we can do like, long press vs short press
+			- So like, if you do:
+
+				* thing has an action
+				* how many clicks ?
+					* if 1, was it long press or short ? or whatever
+					* if many, do some other thing
+				* 'receiveAction' / reset state
+
+	- ya ok that will be cool i am a smart boy
+**/

@@ -80,7 +80,7 @@ void Snake::setUnprotected() {
 void Snake::update(unsigned long elapsed, int pixelCount) {
 
 	float elapsedFloatMS = (float) elapsed;
-	float pixelCountF = (float) pixelCount;
+	float pixelCountF    = (float) pixelCount;
 
 	p = (p + ((elapsedFloatMS / 1000) * v));
 
@@ -101,7 +101,7 @@ void Snake::update(unsigned long elapsed, int pixelCount) {
 		p -= pixelCountF;
 
 	if (lifetimeMS > 0 && millis() - bornMillis > lifetimeMS) {
-		Serial.println("PIXEL DONE DIED");
+		Serial.println("SNAKE DIED");
 		setInactive();
 		setPixel(0);
 	}

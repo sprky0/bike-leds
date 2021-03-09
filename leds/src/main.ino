@@ -7,6 +7,31 @@
 #include "Snake.h"
 #include "Button.h"
 
+
+// Adafruit_NeoPixel strip(174, 6, NEO_GRB + NEO_KHZ800);
+//
+// void setup() {
+//
+// 	strip.begin();
+//
+// }
+//
+// int altR = 0;
+//
+// void loop() {
+//
+// 	for (uint16_t i = 0; i < 174; i++) {
+// 		strip.setPixelColor(i, altR, i, 0 );
+// 	}
+// 	altR++;
+// 	altR = altR % 255;
+// 	delay(100);
+//
+// 	strip.show();
+//
+// }
+//
+
 // Current display mode
 int displayMode = DISPLAY_MODE_PENDING;
 
@@ -28,6 +53,7 @@ int cycleCount = 0;
 Snake snakes[MAX_SNAKES];
 PixelProxy proxy = PixelProxy();
 Adafruit_NeoPixel strip(STRIP_PIXEL_LENGTH, PIXEL_PIN, NEO_GRB + NEO_KHZ800);
+// Adafruit_NeoPixel strip(174, 6, NEO_GRB + NEO_KHZ800);
 
 Button upButton     = Button(BUTTON_PIN_UP);
 Button downButton   = Button(BUTTON_PIN_DOWN);
@@ -35,7 +61,7 @@ Button remoteButton = Button(BUTTON_PIN_REMOTE);
 
 // int lastPpotVal = 0;
 int potVal = 0;
-float potValFloat = 0.0;
+float potValFloat = 1.0;
 
 
 int fR = 160;
@@ -78,11 +104,9 @@ void setup() {
 	showWelcome();
 
 	// changeMode( DISPLAY_MODE_PENDING, true );
-	changeMode( DISPLAY_MODE_FADER, true );
+	changeMode( random(DISPLAY_MODE_MINIMUM, DISPLAY_MODE_MAXIMUM), true );
+
 }
-
-
-
 
 
 int startIterator = 0;
@@ -107,7 +131,7 @@ void loop() {
 	elapsedMS = millis() - previousMillis;
 	previousMillis = millis();
 
-	readInterface(elapsedMS);
+	// readInterface(elapsedMS);
 	// switch mode here -- eg: fade in / out or solid colors or whatever vs snakemode
 
 	bool hasUpAction = false;
@@ -199,6 +223,11 @@ void loop() {
 			}
 			break;
 
+		case DISPLAY_MODE_RAINBOW:
+			// elapsedMS % 255
+			rainbowCycleNonBlock( cycleCount % 255 );
+			break;
+
 	}
 
 	// Update strip proxy from visualizations for user interaction (eg: light up some LEDS for button press or what-have-you)
@@ -248,7 +277,7 @@ void changeMode(int targetMode, bool force) {
 		break;
 
 		case DISPLAY_MODE_PARKED:
-		strip.setBrightness(100);
+		strip.setBrightness(255);
 		populateSnakes(); // clear snakes
 		snakes[0] = Snake(
 			0,
@@ -292,12 +321,12 @@ void changeMode(int targetMode, bool force) {
 		break;
 
 		case DISPLAY_MODE_SNAKES:
-		strip.setBrightness(200);
+		strip.setBrightness(255);
 		getWoodlandSnakes();
 		break;
 
 		case DISPLAY_MODE_SNAKEFRICTION:
-		strip.setBrightness(200);
+		strip.setBrightness(255);
 		populateSnakes();
 		break;
 
@@ -306,16 +335,21 @@ void changeMode(int targetMode, bool force) {
 		fG = random(10,160);
 		fB = random(10,160);
 		populateSnakes();
-		strip.setBrightness(100);
+		strip.setBrightness(255);
 		break;
 
 		case DISPLAY_MODE_FIRE:
-		strip.setBrightness(100);
+		strip.setBrightness(255);
 		populateSnakes(); // clear me
 		break;
 
 		case DISPLAY_MODE_LINES:
-		strip.setBrightness(200);
+		strip.setBrightness(255);
+		break;
+
+		case DISPLAY_MODE_RAINBOW:
+		cycleCount = 0;
+		cycleMS = 1;
 		break;
 
 
@@ -688,53 +722,42 @@ void setAllLEDs(int r, int g, int b) {
 
 void showWelcome() {
 
-	// for(int i = 0; i < STRIP_PIXEL_LENGTH - 7; i += 7) {
-	// 	if (i > 6) {
-	// 		strip.setPixelColor(i - 7, 0, 0, 0);
-	// 		strip.setPixelColor(i - 6, 0, 0, 0);
-	// 		strip.setPixelColor(i - 5, 0, 0, 0);
-	// 		strip.setPixelColor(i - 4, 0, 0, 0);
-	// 		strip.setPixelColor(i - 3, 0, 0, 0);
-	// 		strip.setPixelColor(i - 2, 0, 0, 0);
-	// 		strip.setPixelColor(i - 1, 0, 0, 0);
+	// for (uint16_t r = 0; r < 255; r++) {
+	// 	for (uint16_t g = 0; g < 255; g++) {
+	// 		for (uint16_t b = 0; b < 255; b++) {
+	// 			setAllLEDs(r,g,b);
+	// 		}
+	// 		// delay(1);
+	// 		strip.show();
 	// 	}
-	int i = 0;
-		// delay(10);
 	// }
 
-	// int i = 0;
-	strip.setPixelColor(i,     255, 0,   0); // R
-	strip.setPixelColor(i + 1, 255, 127, 0); // O
-	strip.setPixelColor(i + 2, 255, 255, 0); // Y
-	strip.setPixelColor(i + 3, 0,   255, 0); // G
-	strip.setPixelColor(i + 4, 0,   0,   255); // B
-	strip.setPixelColor(i + 5, 75,  255, 130); // I
-	strip.setPixelColor(i + 6, 148, 255, 211); // V
-
-	i = 97;
-	strip.setPixelColor(i,     255, 0,   0); // R
-	strip.setPixelColor(i + 1, 255, 127, 0); // O
-	strip.setPixelColor(i + 2, 255, 255, 0); // Y
-	strip.setPixelColor(i + 3, 0,   255, 0); // G
-	strip.setPixelColor(i + 4, 0,   0,   255); // B
-	strip.setPixelColor(i + 5, 75,  255, 130); // I
-	strip.setPixelColor(i + 6, 148, 255, 211); // V
-
-
-	strip.show();
-
-
-	delay(500);
-
-	for(int i = 0; i < 50; i++) {
-		setAllLEDs(i, i / 2,i / 3);
+	for (uint16_t r = 0; r < 255; r++) {
+		uint32_t c = getColorWheelValue(r);
+		setAllLEDs(
+			getRed(c),
+			getGreen(c),
+			getBlue(c)
+		);
 		delay(1);
 	}
-	for(int i = 50; i > 0; i--) {
-		setAllLEDs(i, i / 2,i / 3);
-		delay(1);
-	}
+	// for (uint16_t i = 0; i < STRIP_PIXEL_LENGTH; i++) {
+	// 	strip.setPixelColor(i,0,0,0);
+	// }
+	// strip.show();
 
+
+	delay(1000);
+
+	// for(int i = 0; i < 50; i++) {
+	// 	setAllLEDs(i, i / 2,i / 3);
+	// 	delay(1);
+	// }
+	// for(int i = 50; i > 0; i--) {
+	// 	setAllLEDs(i, i / 2,i / 3);
+	// 	delay(1);
+	// }
+	//
 	setAllLEDs(0,0,0);
 
 }
@@ -856,4 +879,35 @@ uint8_t getGreen(uint32_t color) {
 // Returns the Blue component of a 32-bit color
 uint8_t getBlue(uint32_t color) {
 	return color & 0xFF;
+}
+
+
+
+
+
+
+// Slightly different, this makes the rainbow equally distributed throughout
+void rainbowCycleNonBlock(uint16_t j) {
+	// 0 - 255 for outer wheelness
+	uint16_t i;
+	for(i=0; i < STRIP_PIXEL_LENGTH; i++) {
+		uint32_t color = getColorWheelValue(((i * 256 / STRIP_PIXEL_LENGTH) + j) & 255);
+		proxy.setPixelColor(i, getRed(color), getGreen(color), getBlue(color));
+	}
+}
+
+
+// Input a value 0 to 255 to get a color value.
+// The colours are a transition r - g - b - back to r.
+uint32_t getColorWheelValue(byte WheelPos) {
+	WheelPos = 255 - WheelPos;
+	if(WheelPos < 85) {
+		return strip.Color(255 - WheelPos * 3, 0, WheelPos * 3);
+	}
+	if(WheelPos < 170) {
+		WheelPos -= 85;
+		return strip.Color(0, WheelPos * 3, 255 - WheelPos * 3);
+	}
+	WheelPos -= 170;
+	return strip.Color(WheelPos * 3, 255 - WheelPos * 3, 0);
 }

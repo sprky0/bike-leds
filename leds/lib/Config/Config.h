@@ -9,8 +9,8 @@
 
 // Pixel configuration relative to strip length
 #define PIXEL_PIN 6
-#define STRIP_PIXEL_LENGTH 260
-#define PRACTICAL_PIXEL_COUNT 260
+#define STRIP_PIXEL_LENGTH 174
+#define PRACTICAL_PIXEL_COUNT 174
 #define MAX_SNAKES 50
 
 // Display modes - eg: all lights off, blinking, cycling, whatever
@@ -23,7 +23,8 @@
 #define DISPLAY_MODE_FIRE    3
 #define DISPLAY_MODE_LINES   4
 #define DISPLAY_MODE_SNAKEFRICTION 5
-#define DISPLAY_MODE_MAXIMUM 5
+#define DISPLAY_MODE_RAINBOW 6
+#define DISPLAY_MODE_MAXIMUM 6
 
 #define DISPLAY_MODE_PENDING 100  // Waiting for stuff to happen -- don't do anything yet
 #define DISPLAY_MODE_PARKED  101  // Parked mode - minimal lighting, enough to be visible at night

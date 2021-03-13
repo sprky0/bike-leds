@@ -57,7 +57,7 @@ Adafruit_NeoPixel strip(STRIP_PIXEL_LENGTH, PIXEL_PIN, NEO_GRB + NEO_KHZ800);
 
 Button upButton     = Button(BUTTON_PIN_UP);
 Button downButton   = Button(BUTTON_PIN_DOWN);
-Button remoteButton = Button(BUTTON_PIN_REMOTE);
+// Button remoteButton = Button(BUTTON_PIN_REMOTE);
 
 // int lastPpotVal = 0;
 int potVal = 0;
@@ -101,10 +101,9 @@ void setup() {
 
 	Serial.println("Setup all set!");
 
-	showWelcome();
+	// showWelcome();
 
-	// changeMode( DISPLAY_MODE_PENDING, true );
-	changeMode( random(DISPLAY_MODE_MINIMUM, DISPLAY_MODE_MAXIMUM), true );
+	changeMode( DISPLAY_MODE_SOLID, true );
 
 }
 
@@ -131,12 +130,12 @@ void loop() {
 	elapsedMS = millis() - previousMillis;
 	previousMillis = millis();
 
-	// readInterface(elapsedMS);
+	readInterface(elapsedMS);
 	// switch mode here -- eg: fade in / out or solid colors or whatever vs snakemode
 
 	bool hasUpAction = false;
 	bool hasDownAction = false;
-	bool hasRemoteAction = false;
+	// bool hasRemoteAction = false;
 
 	if (upButton.hasAction()) {
 		hasUpAction = true;
@@ -158,12 +157,12 @@ void loop() {
 		downButton.resetAction();
 	}
 
-	if (remoteButton.hasAction()) {
-		hasRemoteAction = true;
-		elapsedMS = 0;
-		changeMode(DISPLAY_MODE_FIND, true);
-		remoteButton.resetAction();
-	}
+	// if (remoteButton.hasAction()) {
+	// 	hasRemoteAction = true;
+	// 	elapsedMS = 0;
+	// 	changeMode(DISPLAY_MODE_FIND, true);
+	// 	remoteButton.resetAction();
+	// }
 
 
 	// Update strip proxy from visualizer components (eg: parked thing, particle thing, etc)
@@ -173,6 +172,10 @@ void loop() {
 		default:
 			// nothing doing here
 			// Serial.println("DOING NOTHING, INTENTIONALLY!");
+			break;
+
+		case DISPLAY_MODE_SOLID:
+			updateProxySolid( potValFloat );
 			break;
 
 		case DISPLAY_MODE_LINES:
@@ -205,10 +208,10 @@ void loop() {
 			}
 			break;
 
-		case DISPLAY_MODE_SNAKEFRICTION:
-			updateProxyFromSnakes(elapsedMS);
-			addRandomFrictionSnakes(); // snakeFriction
-			break;
+		// case DISPLAY_MODE_SNAKEFRICTION:
+		// 	updateProxyFromSnakes(elapsedMS);
+		// 	addRandomFrictionSnakes(); // snakeFriction
+		// 	break;
 
 		case DISPLAY_MODE_FADER:
 			updateProxyFader(elapsedMS);
@@ -325,10 +328,10 @@ void changeMode(int targetMode, bool force) {
 		getWoodlandSnakes();
 		break;
 
-		case DISPLAY_MODE_SNAKEFRICTION:
-		strip.setBrightness(255);
-		populateSnakes();
-		break;
+		// case DISPLAY_MODE_SNAKEFRICTION:
+		// strip.setBrightness(255);
+		// populateSnakes();
+		// break;
 
 		case DISPLAY_MODE_FADER:
 		fR = random(10,160);
@@ -352,6 +355,10 @@ void changeMode(int targetMode, bool force) {
 		cycleMS = 1;
 		break;
 
+		case DISPLAY_MODE_SOLID:
+		cycleCount = 0;
+		cycleMS = 0;
+		break;
 
 	}
 
@@ -432,14 +439,14 @@ void updateProxyFromIndicator(unsigned long elapsed) {
 		}
 	}
 
-	if (remoteButton.getState()) {
-		for(int i = 21; i <= 31; i++) {
-			proxy.setPixelColor(i,0,0,255);
-		}
-		for(int i = 96; i <= 106; i++) {
-			proxy.setPixelColor(i,0,0,255);
-		}
-	}
+	// if (remoteButton.getState()) {
+	// 	for(int i = 21; i <= 31; i++) {
+	// 		proxy.setPixelColor(i,0,0,255);
+	// 	}
+	// 	for(int i = 96; i <= 106; i++) {
+	// 		proxy.setPixelColor(i,0,0,255);
+	// 	}
+	// }
 
 }
 
@@ -684,7 +691,7 @@ void readInterface(unsigned long elapsedMS) {
 
 	upButton.read();
 	downButton.read();
-	remoteButton.read();
+	// remoteButton.read();
 
 	int _potVal = analogRead(A0);
 
@@ -695,6 +702,7 @@ void readInterface(unsigned long elapsedMS) {
 			potVal += POTENTIOMETER_SLEW_LIMIT;
 	}
 
+	/*
 	if (potVal < 680)
 		potVal = 680;
 	else if (potVal > 1023)
@@ -703,7 +711,9 @@ void readInterface(unsigned long elapsedMS) {
 	// potVal = (potVal + _potVal) / 2;
 
 	// 680 - 1023 RANGE FOR SOME REASON
-	potValFloat = (float) (potVal - 680) / 343;
+	// potValFloat = (float) (potVal - 680) / 343; // << values for the bike
+	*/
+	potValFloat = (float) potVal / 1024; // value for 10k resistor M5 version
 
 	if (potValFloat < 0) {
 		potValFloat = 0;
@@ -806,6 +816,24 @@ void updateProxyFire(unsigned long elapsedMS) {
 
 }
 
+void updateProxySolid(float val) {
+	// proxy.setPixelColor( potValFloat * 255);
+	byte gral = 255 * val;
+
+	Serial.print(val);
+	Serial.print(" ");
+	Serial.print(gral);
+	Serial.println();
+
+	uint32_t kolor = getColorWheelValue( gral );
+	proxy.setAll(
+		getRed(kolor),
+		getGreen(kolor),
+		getBlue(kolor)
+	);
+
+}
+
 void getWoodlandSnakes() {
 
 	for(int i = 0; i < MAX_SNAKES; i++) {
@@ -842,30 +870,30 @@ void addSnakeSparkles() {
 
 }
 
-void addRandomFrictionSnakes() {
-
-	if (random(1,100) > 95) {
-
-		int snakeIndex = getFreeSnakeIndex();
-
-		snakes[snakeIndex] = Snake(
-			random(0, PRACTICAL_PIXEL_COUNT),
-			// random(0,50),
-			random(5,20),
-			-200 + random(0,400),
-			// random(0,255), random(0,255), random(0,255)
-			random(0,255), random(0,155), random(0,50)
-		);
-
-		snakes[snakeIndex].setFriction(.6);
-		// snakes[snakeIndex].setLoopDeath(true); // loop death is really weird with tails lets do fade instead
-		snakes[snakeIndex].setLifetime(5000);
-		snakes[snakeIndex].setActive();
-
-	}
-
-
-}
+// void addRandomFrictionSnakes() {
+//
+// 	if (random(1,100) > 95) {
+//
+// 		int snakeIndex = getFreeSnakeIndex();
+//
+// 		snakes[snakeIndex] = Snake(
+// 			random(0, PRACTICAL_PIXEL_COUNT),
+// 			// random(0,50),
+// 			random(5,20),
+// 			-200 + random(0,400),
+// 			// random(0,255), random(0,255), random(0,255)
+// 			random(0,255), random(0,155), random(0,50)
+// 		);
+//
+// 		snakes[snakeIndex].setFriction(.6);
+// 		// snakes[snakeIndex].setLoopDeath(true); // loop death is really weird with tails lets do fade instead
+// 		snakes[snakeIndex].setLifetime(5000);
+// 		snakes[snakeIndex].setActive();
+//
+// 	}
+//
+//
+// }
 
 uint8_t getRed(uint32_t color) {
 	return (color >> 16) & 0xFF;

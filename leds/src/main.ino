@@ -103,7 +103,7 @@ void setup() {
 
 	// showWelcome();
 
-	changeMode( DISPLAY_MODE_SOLID, true );
+	changeMode( DISPLAY_MODE_PENDING, true );
 
 }
 
@@ -176,6 +176,7 @@ void loop() {
 
 		case DISPLAY_MODE_SOLID:
 			updateProxySolid( potValFloat );
+			// /updateProxyFromSnakes(elapsedMS, true);
 			break;
 
 		case DISPLAY_MODE_LINES:
@@ -215,20 +216,21 @@ void loop() {
 
 		case DISPLAY_MODE_FADER:
 			updateProxyFader(elapsedMS);
-			updateProxyFromSnakes(elapsedMS, true);
-			if (potValFloat > 0.5 && random(0,100) > 90) {
-				addARandomSnake();
-			}
-			if (potValFloat > 0.8 && random(0,100) > 90) {
-				int snakeIndex = getActiveSnakeIndex();
-				if (snakeIndex > 0)
-					explodeSnake(snakeIndex);
-			}
+			// updateProxyFromSnakes(elapsedMS, true);
+			// if (potValFloat > 0.5 && random(0,100) > 90) {
+			// 	addARandomSnake();
+			// }
+			// if (potValFloat > 0.8 && random(0,100) > 90) {
+			// 	int snakeIndex = getActiveSnakeIndex();
+			// 	if (snakeIndex > 0)
+			// 		explodeSnake(snakeIndex);
+			// }
 			break;
 
 		case DISPLAY_MODE_RAINBOW:
 			// elapsedMS % 255
 			rainbowCycleNonBlock( cycleCount % 255 );
+			cycleDuration = 100 * potValFloat;
 			break;
 
 	}
